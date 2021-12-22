@@ -1,7 +1,6 @@
 package com.example.volumechanger
 
 import android.content.DialogInterface
-import android.graphics.PointF
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
@@ -40,9 +39,17 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
     override fun onMapReady(map: NaverMap) {
         naverMap = map
 
+        lateinit var pointF: LatLng
+        val select = intent.getStringExtra("select")
+        if(select == "item"){
+            pointF = LatLng(1.0, 1.0)
+        }else{
+            pointF = LatLng(33.38, 126.55)
+        }
+
         var camPos = CameraPosition(
-            LatLng(33.38, 126.55),
-            9.0
+                pointF,
+                9.0
         )
         naverMap.cameraPosition = camPos
 

@@ -3,11 +3,6 @@ package com.example.volumechanger
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.view.MotionEvent
-import android.view.View
-import android.widget.AdapterView
-import android.widget.Toast
-import androidx.core.content.ContextCompat
 import com.example.volumechanger.databinding.ActivityMainBinding
 
 class MainActivity : AppCompatActivity() {
@@ -27,10 +22,12 @@ class MainActivity : AppCompatActivity() {
         val intent = Intent(this, MapActivity::class.java)
 
         binding.locList.setOnItemClickListener { parent, view, position, id ->
+            intent.putExtra("select", "item")
             startActivity(intent)
         }
 
         binding.mapBtn.setOnClickListener {
+            intent.putExtra("select", "button")
             startActivity(intent)
         }
     }
