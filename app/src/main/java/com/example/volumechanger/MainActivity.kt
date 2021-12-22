@@ -27,23 +27,11 @@ class MainActivity : AppCompatActivity() {
         val intent = Intent(this, MapActivity::class.java)
 
         binding.locList.setOnItemClickListener { parent, view, position, id ->
-            intent.putExtra("Task", "checkPos")
             startActivity(intent)
         }
-        binding.locList.setOnItemLongClickListener { parent, view, position, id ->
-            val dialog = LongClickDialog(this)
-            dialog.showDig()
-            dialog.setOnClikedListenser(object: LongClickDialog.ButtonClickListener{
-                override fun onClicked(select: String){
-                    if(select == "revise"){
-                        intent.putExtra("Task", "revise")
-                    }else if(select == "delete"){
-                        intent.putExtra("Task", "delete")
-                    }
-                    startActivity(intent)
-                }
-            })
-            true
+
+        binding.mapBtn.setOnClickListener {
+            startActivity(intent)
         }
     }
 }

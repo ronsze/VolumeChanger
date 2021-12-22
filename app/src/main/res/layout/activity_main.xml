@@ -16,9 +16,9 @@
     </ListView>
 
     <Button
-        android:id="@+id/button"
+        android:id="@+id/mapBtn"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:textSize="20sp"
-        android:text="추가" />
+        android:text="지도" />
 </LinearLayout>
