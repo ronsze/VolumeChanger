@@ -1,6 +1,8 @@
 package com.example.volumechanger
 
+import android.content.Context
 import android.content.DialogInterface
+import android.media.AudioManager
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
@@ -18,7 +20,6 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
     companion object{
         lateinit var naverMap: NaverMap
     }
-
     private lateinit var mapView: MapView
     private lateinit var binding: ActivityMapBinding
 
@@ -27,9 +28,6 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
         binding = ActivityMapBinding.inflate(layoutInflater)
         val view = binding.root
         setContentView(view)
-
-        val task = intent.getStringExtra("Task")
-        Log.e("task", task.toString())
 
         mapView = binding.mapView
         mapView.onCreate(savedInstanceState)
@@ -42,7 +40,7 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
         lateinit var pointF: LatLng
         val select = intent.getStringExtra("select")
         if(select == "item"){
-            pointF = LatLng(1.0, 1.0)
+            pointF = LatLng(33.38, 126.55)
         }else{
             pointF = LatLng(33.38, 126.55)
         }
@@ -54,17 +52,14 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
         naverMap.cameraPosition = camPos
 
         naverMap.setOnMapLongClickListener { pointF, latLng ->
-            val builder = AlertDialog.Builder(this)
-                    .setTitle("해당 위치에 설정하시겠습니까?")
-                    .setPositiveButton("확인",
-                            DialogInterface.OnClickListener { dialog, which ->
-                                Toast.makeText(this, "마커생성", Toast.LENGTH_SHORT).show()
-                                createMarker(latLng)
-                            })
-                    .setNegativeButton("취소",
-                            DialogInterface.OnClickListener { dialog, which ->
-                            })
-                    .show()
+            val dialog = MarkerDialog(this)
+            dialog.showDia()
+            dialog.setOnClickListener(object : MarkerDialog.ButtonOnClickLister{
+                override fun onClicked(name: String, range: Int, volume: Int) {
+                    Log.e("받아온 값", "${name}, ${range}, ${volume}")
+                    createMarker(latLng)
+                }
+            })
         }
     }
 
@@ -104,5 +99,21 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
                 zoom
         )
         naverMap.cameraPosition = camPos
+    }
+
+    private fun volumeChange(vol: Int){
+        var audioManager: AudioManager
+        audioManager = applicationContext.getSystemService(Context.AUDIO_SERVICE) as AudioManager
+
+        when(vol){
+            0 -> audioManager.ringerMode = AudioManager.RINGER_MODE_VIBRATE
+            -1 -> audioManager.ringerMode = AudioManager.RINGER_MODE_SILENT
+            else -> {
+                audioManager.ringerMode = AudioManager.RINGER_MODE_NORMAL
+                audioManager.adjustStreamVolume(AudioManager.STREAM_RING,
+                        (audioManager.getStreamMaxVolume(AudioManager.STREAM_RING) * (vol/100.0)).toInt(),
+                AudioManager.FLAG_PLAY_SOUND)
+            }
+        }
     }
 }
