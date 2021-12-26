@@ -7,7 +7,7 @@ import android.widget.BaseAdapter
 import android.widget.Button
 import android.widget.TextView
 
-data class ListViewItem(val name: String, val address: String)
+data class ListViewItem(val name: String, val point: String, val address: String)
 
 class LocListAdapater (private val items: MutableList<ListViewItem>): BaseAdapter() {
     override fun getCount(): Int = items.size

@@ -2,6 +2,7 @@ package com.example.volumechanger
 
 import android.app.Dialog
 import android.content.Context
+import android.database.sqlite.SQLiteDatabase
 import android.view.WindowManager
 import android.widget.*
 

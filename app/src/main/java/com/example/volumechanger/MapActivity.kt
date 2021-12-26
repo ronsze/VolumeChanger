@@ -2,6 +2,7 @@ package com.example.volumechanger
 
 import android.content.Context
 import android.content.DialogInterface
+import android.database.sqlite.SQLiteDatabase
 import android.media.AudioManager
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
@@ -22,12 +23,17 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
     }
     private lateinit var mapView: MapView
     private lateinit var binding: ActivityMapBinding
+    lateinit var dbHelper: DBHelper
+    lateinit var database: SQLiteDatabase
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMapBinding.inflate(layoutInflater)
         val view = binding.root
         setContentView(view)
+
+        dbHelper = DBHelper(this, "newdb.db", null, 1)
+        database = dbHelper.writableDatabase
 
         mapView = binding.mapView
         mapView.onCreate(savedInstanceState)
@@ -37,19 +43,9 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
     override fun onMapReady(map: NaverMap) {
         naverMap = map
 
-        lateinit var pointF: LatLng
-        val select = intent.getStringExtra("select")
-        if(select == "item"){
-            pointF = LatLng(33.38, 126.55)
-        }else{
-            pointF = LatLng(33.38, 126.55)
-        }
-
-        var camPos = CameraPosition(
-                pointF,
-                9.0
-        )
-        naverMap.cameraPosition = camPos
+        var pointF = getInitPoint()
+        changeCamPos(pointF, 9.0)
+        initMarkers()
 
         naverMap.setOnMapLongClickListener { pointF, latLng ->
             val dialog = MarkerDialog(this)
@@ -57,13 +53,58 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
             dialog.setOnClickListener(object : MarkerDialog.ButtonOnClickLister{
                 override fun onClicked(name: String, range: Int, volume: Int) {
                     Log.e("받아온 값", "${name}, ${range}, ${volume}")
-                    createMarker(latLng)
+                    var point = "${latLng.latitude},${latLng.longitude}"
+                    var query = "INSERT INTO lists('name', 'range', 'volume', 'point') " +
+                            "values('${name}', '${range}', '${volume}', '${point}');"
+                    database.execSQL(query)
+
+                    query = "SELECT id FROM lists " +
+                            "WHERE point = '${point}';"
+                    var cursor = database.rawQuery(query, null)
+                    cursor.moveToNext()
+
+                    query = "SELECT * FROM lists;"
+                    var c = database.rawQuery(query, null)
+                    while(c.moveToNext()){
+                        Log.e("select", "${c.getString(c.getColumnIndex("id"))} " +
+                                "${c.getString(c.getColumnIndex("name"))} " +
+                                "${c.getString(c.getColumnIndex("range"))} " +
+                                "${c.getString(c.getColumnIndex("volume"))} " +
+                                "${c.getString(c.getColumnIndex("point"))}")
+                    }
+                    createMarker(cursor.getString(0).toInt(), latLng)
                 }
             })
         }
     }
+    private fun getInitPoint(): LatLng{
+        lateinit var pointF: LatLng
+        val select = intent.getStringExtra("select")
+        if(select == "item"){
+            var point = intent.getStringExtra("point")!!.split(",")
+            var lat = point[0].toDouble()
+            var lng = point[1].toDouble()
+            pointF = LatLng(lat, lng)
+        }else{
+            pointF = LatLng(33.38, 126.55)
+        }
+        return pointF
+    }
 
-    private fun createMarker(latLng: LatLng){
+    private fun initMarkers(){
+        var query: String
+        query = "SELECT * FROM lists;"
+        var c = database.rawQuery(query, null)
+        while(c.moveToNext()){
+            var latLng = c.getString(c.getColumnIndex("point")).toString().split(",")
+            var lat = latLng[0].toDouble()
+            var lng = latLng[1].toDouble()
+            var id = c.getString(0).toInt()
+            createMarker(id, LatLng(lat, lng))
+        }
+    }
+
+    private fun createMarker(id: Int, latLng: LatLng){
         val marker = Marker()
         marker.position = latLng
         marker.setOnClickListener {
@@ -81,7 +122,7 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
             false
         }
         marker.map = naverMap
-        changeCamPos(latLng, 12.0)
+        marker.tag = id
     }
 
     private fun reviseMarker(){
@@ -89,8 +130,8 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
     }
 
     private fun delMarker(marker: Marker){
-        Log.e("마커", "삭제")
         marker.map = null
+        database.execSQL("DELETE FROM lists WHERE id = ${marker.tag}")
     }
 
     private fun changeCamPos(latLng: LatLng, zoom: Double){
