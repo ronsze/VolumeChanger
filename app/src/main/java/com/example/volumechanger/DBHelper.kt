@@ -16,7 +16,7 @@ class DBHelper(
                 "name text," +
                 "range integer," +
                 "volume integer," +
-                "point VARCHAR(100));";
+                "point VARCHAR(100));"
 
         db.execSQL(sql)
     }

@@ -1,7 +1,10 @@
 package com.example.volumechanger
 
+import android.app.PendingIntent
 import android.content.Context
 import android.content.DialogInterface
+import android.content.Intent
+import android.content.pm.PackageManager
 import android.database.sqlite.SQLiteDatabase
 import android.media.AudioManager
 import androidx.appcompat.app.AppCompatActivity
@@ -9,12 +12,15 @@ import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
+import androidx.core.app.ActivityCompat
 import com.example.volumechanger.databinding.ActivityMapBinding
+import com.google.android.gms.location.*
 import com.naver.maps.geometry.LatLng
 import com.naver.maps.map.CameraPosition
 import com.naver.maps.map.MapView
 import com.naver.maps.map.NaverMap
 import com.naver.maps.map.OnMapReadyCallback
+import com.naver.maps.map.overlay.LocationOverlay
 import com.naver.maps.map.overlay.Marker
 
 class MapActivity : AppCompatActivity(), OnMapReadyCallback {
@@ -25,12 +31,18 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
     private lateinit var binding: ActivityMapBinding
     lateinit var dbHelper: DBHelper
     lateinit var database: SQLiteDatabase
+    lateinit var geofencingClient: GeofencingClient
+    val geofenceList: MutableList<Geofence> by lazy{
+        mutableListOf()
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMapBinding.inflate(layoutInflater)
         val view = binding.root
         setContentView(view)
+
+        geofencingClient = LocationServices.getGeofencingClient(this)
 
         dbHelper = DBHelper(this, "newdb.db", null, 1)
         database = dbHelper.writableDatabase
@@ -52,27 +64,19 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
             dialog.showDia()
             dialog.setOnClickListener(object : MarkerDialog.ButtonOnClickLister{
                 override fun onClicked(name: String, range: Int, volume: Int) {
-                    Log.e("받아온 값", "${name}, ${range}, ${volume}")
                     var point = "${latLng.latitude},${latLng.longitude}"
-                    var query = "INSERT INTO lists('name', 'range', 'volume', 'point') " +
-                            "values('${name}', '${range}', '${volume}', '${point}');"
+                    var query = "INSERT INTO lists('name', 'range', 'volume', 'point') values('${name}', '${range}', '${volume}', '${point}');"
                     database.execSQL(query)
 
-                    query = "SELECT id FROM lists " +
-                            "WHERE point = '${point}';"
+                    query = "SELECT id FROM lists WHERE point = '${point}';"
                     var cursor = database.rawQuery(query, null)
                     cursor.moveToNext()
 
-                    query = "SELECT * FROM lists;"
-                    var c = database.rawQuery(query, null)
-                    while(c.moveToNext()){
-                        Log.e("select", "${c.getString(c.getColumnIndex("id"))} " +
-                                "${c.getString(c.getColumnIndex("name"))} " +
-                                "${c.getString(c.getColumnIndex("range"))} " +
-                                "${c.getString(c.getColumnIndex("volume"))} " +
-                                "${c.getString(c.getColumnIndex("point"))}")
-                    }
-                    createMarker(cursor.getString(0).toInt(), latLng)
+                    val id = cursor.getString(0)
+                    val geofence = getGeofence(id, LatLng(latLng.latitude, latLng.longitude), range.toFloat())
+                    geofenceList.add(geofence)
+                    createMarker(id.toInt(), latLng)
+                    addGeofences(volume)
                 }
             })
         }
@@ -142,19 +146,44 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
         naverMap.cameraPosition = camPos
     }
 
-    private fun volumeChange(vol: Int){
-        var audioManager: AudioManager
-        audioManager = applicationContext.getSystemService(Context.AUDIO_SERVICE) as AudioManager
+    private fun getGeofence(reqId: String, geo: LatLng, radius: Float): Geofence {
+        return Geofence.Builder()
+            .setRequestId(reqId)
+            .setCircularRegion(geo.latitude, geo.longitude, radius)
+            .setExpirationDuration(Geofence.NEVER_EXPIRE)
+            .setLoiteringDelay(10000)
+            .setTransitionTypes(
+                Geofence.GEOFENCE_TRANSITION_ENTER
+                        or Geofence.GEOFENCE_TRANSITION_EXIT
+            )
+            .build()
+    }
 
-        when(vol){
-            0 -> audioManager.ringerMode = AudioManager.RINGER_MODE_VIBRATE
-            -1 -> audioManager.ringerMode = AudioManager.RINGER_MODE_SILENT
-            else -> {
-                audioManager.ringerMode = AudioManager.RINGER_MODE_NORMAL
-                audioManager.adjustStreamVolume(AudioManager.STREAM_RING,
-                        (audioManager.getStreamMaxVolume(AudioManager.STREAM_RING) * (vol/100.0)).toInt(),
-                AudioManager.FLAG_PLAY_SOUND)
+    private fun addGeofences(volume: Int){
+        if(ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION)
+            == PackageManager.PERMISSION_GRANTED){
+                Log.e("asdasd", "asdasd")
+                val intent = Intent(this, GeofenceBroadcastReceiver::class.java)
+                intent.putExtra("volume", volume)
+                val pendingIntent = PendingIntent.getBroadcast(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT)
+            geofencingClient.addGeofences(getGeofencingRequest(geofenceList), pendingIntent).run{
+                addOnSuccessListener {
+                    Log.e("addGeo", "add Success")
+                }
+                addOnFailureListener {
+                    Log.e("addGeo", "add Fail")
+
+                }
             }
         }
     }
+
+    private fun getGeofencingRequest(list: List<Geofence>): GeofencingRequest {
+        return GeofencingRequest.Builder().apply{
+            setInitialTrigger(GeofencingRequest.INITIAL_TRIGGER_ENTER)
+            addGeofences(list)
+        }.build()
+    }
+
+
 }
