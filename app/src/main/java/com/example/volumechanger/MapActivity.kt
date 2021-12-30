@@ -1,16 +1,12 @@
 package com.example.volumechanger
 
 import android.app.PendingIntent
-import android.content.Context
-import android.content.DialogInterface
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.database.sqlite.SQLiteDatabase
-import android.media.AudioManager
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
-import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.core.app.ActivityCompat
 import com.example.volumechanger.databinding.ActivityMapBinding
@@ -20,7 +16,6 @@ import com.naver.maps.map.CameraPosition
 import com.naver.maps.map.MapView
 import com.naver.maps.map.NaverMap
 import com.naver.maps.map.OnMapReadyCallback
-import com.naver.maps.map.overlay.LocationOverlay
 import com.naver.maps.map.overlay.Marker
 
 class MapActivity : AppCompatActivity(), OnMapReadyCallback {
@@ -161,12 +156,15 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
             .build()
     }
 
+    val geoPending: PendingIntent by lazy{
+        val intent = Intent(this, GeofenceBroadcastReceiver::class.java)
+        PendingIntent.getBroadcast(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT)
+    }
+
     private fun addGeofences(){
         if(ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION)
             == PackageManager.PERMISSION_GRANTED){
-                val intent = Intent(this, GeofenceBroadcastReceiver::class.java)
-                val pendingIntent = PendingIntent.getBroadcast(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT)
-            geofencingClient.addGeofences(getGeofencingRequest(geofenceList), pendingIntent).run{
+            geofencingClient.addGeofences(getGeofencingRequest(geofenceList), geoPending).run{
                 addOnSuccessListener {
                     Log.e("addGeo", "add Success")
                 }
@@ -178,9 +176,7 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
     }
 
     private fun removeGeofences(){
-        val intent = Intent(this, GeofenceBroadcastReceiver::class.java)
-        val pendingIntent = PendingIntent.getBroadcast(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT)
-        geofencingClient.removeGeofences(pendingIntent).run{
+        geofencingClient.removeGeofences(geoPending).run{
             addOnSuccessListener {
                 Log.e("removeGeo", "remove Success")
                 geofenceList.clear()
@@ -195,15 +191,17 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
     private fun updateGeofences(){
         val query = "SELECT id, range, point FROM lists;"
         val cursor = database.rawQuery(query, null)
-        while(cursor.moveToNext()){
-            val id = cursor.getString(cursor.getColumnIndex("id"))
-            val point = cursor.getString(cursor.getColumnIndex("point")).split(",")
-            val lat = point[0].toDouble()
-            val lng = point[1].toDouble()
-            val range = cursor.getString(cursor.getColumnIndex("range"))
-            geofenceList.add(getGeofence(id, LatLng(lat, lng), range.toFloat()))
+        if(cursor != null){
+            while(cursor.moveToNext()){
+                val id = cursor.getString(cursor.getColumnIndex("id"))
+                val point = cursor.getString(cursor.getColumnIndex("point")).split(",")
+                val lat = point[0].toDouble()
+                val lng = point[1].toDouble()
+                val range = cursor.getString(cursor.getColumnIndex("range"))
+                geofenceList.add(getGeofence(id, LatLng(lat, lng), range.toFloat()))
+            }
+            addGeofences()
         }
-        addGeofences()
     }
 
     private fun getGeofencingRequest(list: List<Geofence>): GeofencingRequest {
