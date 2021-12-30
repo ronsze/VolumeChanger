@@ -55,8 +55,8 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
     override fun onMapReady(map: NaverMap) {
         naverMap = map
 
-        var pointF = getInitPoint()
-        changeCamPos(pointF, 9.0)
+        val initLoc = getInitPoint()
+        changeCamPos(initLoc)
         initMarkers()
 
         naverMap.setOnMapLongClickListener { pointF, latLng ->
@@ -64,19 +64,19 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
             dialog.showDia()
             dialog.setOnClickListener(object : MarkerDialog.ButtonOnClickLister{
                 override fun onClicked(name: String, range: Int, volume: Int) {
-                    var point = "${latLng.latitude},${latLng.longitude}"
+                    val point = "${latLng.latitude},${latLng.longitude}"
                     var query = "INSERT INTO lists('name', 'range', 'volume', 'point') values('${name}', '${range}', '${volume}', '${point}');"
                     database.execSQL(query)
 
                     query = "SELECT id FROM lists WHERE point = '${point}';"
-                    var cursor = database.rawQuery(query, null)
+                    val cursor = database.rawQuery(query, null)
                     cursor.moveToNext()
 
                     val id = cursor.getString(0)
                     val geofence = getGeofence(id, LatLng(latLng.latitude, latLng.longitude), range.toFloat())
                     geofenceList.add(geofence)
                     createMarker(id.toInt(), latLng)
-                    addGeofences(volume)
+                    addGeofences()
                 }
             })
         }
@@ -85,9 +85,9 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
         lateinit var pointF: LatLng
         val select = intent.getStringExtra("select")
         if(select == "item"){
-            var point = intent.getStringExtra("point")!!.split(",")
-            var lat = point[0].toDouble()
-            var lng = point[1].toDouble()
+            val point = intent.getStringExtra("point")!!.split(",")
+            val lat = point[0].toDouble()
+            val lng = point[1].toDouble()
             pointF = LatLng(lat, lng)
         }else{
             pointF = LatLng(33.38, 126.55)
@@ -96,14 +96,14 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
     }
 
     private fun initMarkers(){
-        var query: String
+        val query: String
         query = "SELECT * FROM lists;"
-        var c = database.rawQuery(query, null)
-        while(c.moveToNext()){
-            var latLng = c.getString(c.getColumnIndex("point")).toString().split(",")
-            var lat = latLng[0].toDouble()
-            var lng = latLng[1].toDouble()
-            var id = c.getString(0).toInt()
+        val cursor = database.rawQuery(query, null)
+        while(cursor.moveToNext()){
+            val latLng = cursor.getString(cursor.getColumnIndex("point")).toString().split(",")
+            val lat = latLng[0].toDouble()
+            val lng = latLng[1].toDouble()
+            val id = cursor.getString(0).toInt()
             createMarker(id, LatLng(lat, lng))
         }
     }
@@ -136,12 +136,14 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
     private fun delMarker(marker: Marker){
         marker.map = null
         database.execSQL("DELETE FROM lists WHERE id = ${marker.tag}")
+        removeGeofences()
+
     }
 
-    private fun changeCamPos(latLng: LatLng, zoom: Double){
+    private fun changeCamPos(latLng: LatLng){
         val camPos = CameraPosition(
                 latLng,
-                zoom
+                9.0
         )
         naverMap.cameraPosition = camPos
     }
@@ -159,12 +161,10 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
             .build()
     }
 
-    private fun addGeofences(volume: Int){
+    private fun addGeofences(){
         if(ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION)
             == PackageManager.PERMISSION_GRANTED){
-                Log.e("asdasd", "asdasd")
                 val intent = Intent(this, GeofenceBroadcastReceiver::class.java)
-                intent.putExtra("volume", volume)
                 val pendingIntent = PendingIntent.getBroadcast(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT)
             geofencingClient.addGeofences(getGeofencingRequest(geofenceList), pendingIntent).run{
                 addOnSuccessListener {
@@ -172,10 +172,38 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
                 }
                 addOnFailureListener {
                     Log.e("addGeo", "add Fail")
-
                 }
             }
         }
+    }
+
+    private fun removeGeofences(){
+        val intent = Intent(this, GeofenceBroadcastReceiver::class.java)
+        val pendingIntent = PendingIntent.getBroadcast(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT)
+        geofencingClient.removeGeofences(pendingIntent).run{
+            addOnSuccessListener {
+                Log.e("removeGeo", "remove Success")
+                geofenceList.clear()
+                updateGeofences()
+            }
+            addOnFailureListener{
+                Log.e("removeGeo", "remove Fail")
+            }
+        }
+    }
+
+    private fun updateGeofences(){
+        val query = "SELECT id, range, point FROM lists;"
+        val cursor = database.rawQuery(query, null)
+        while(cursor.moveToNext()){
+            val id = cursor.getString(cursor.getColumnIndex("id"))
+            val point = cursor.getString(cursor.getColumnIndex("point")).split(",")
+            val lat = point[0].toDouble()
+            val lng = point[1].toDouble()
+            val range = cursor.getString(cursor.getColumnIndex("range"))
+            geofenceList.add(getGeofence(id, LatLng(lat, lng), range.toFloat()))
+        }
+        addGeofences()
     }
 
     private fun getGeofencingRequest(list: List<Geofence>): GeofencingRequest {
@@ -184,6 +212,4 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
             addGeofences(list)
         }.build()
     }
-
-
 }

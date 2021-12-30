@@ -11,7 +11,7 @@ class DBHelper(
         version: Int
 ): SQLiteOpenHelper(context, name, factory, version){
     override fun onCreate(db: SQLiteDatabase) {
-        var sql: String = "CREATE TABLE if not exists lists(" +
+        val sql: String = "CREATE TABLE if not exists lists(" +
                 "id integer primary key autoincrement," +
                 "name text," +
                 "range integer," +

@@ -3,6 +3,7 @@ package com.example.volumechanger
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.database.sqlite.SQLiteDatabase
 import android.media.AudioManager
 import android.util.Log
 import android.widget.Toast
@@ -11,8 +12,19 @@ import com.google.android.gms.location.GeofenceStatusCodes
 import com.google.android.gms.location.GeofencingEvent
 
 class GeofenceBroadcastReceiver: BroadcastReceiver(){
+    lateinit var dbHelper: DBHelper
+    lateinit var database: SQLiteDatabase
+
     override fun onReceive(context: Context?, intent: Intent?) {
+        if(context == null){
+            Log.e("GeofenceErr", "Context is Unvalid")
+            return
+        }
         val geofencingEvent = GeofencingEvent.fromIntent(intent)
+
+        dbHelper = DBHelper(context, "newdb.db", null, 1)
+        database = dbHelper.writableDatabase
+
         if (geofencingEvent.hasError()) {
             Log.e("GeofenceErr", GeofenceStatusCodes.getStatusCodeString(geofencingEvent.errorCode))
             return
@@ -31,6 +43,11 @@ class GeofenceBroadcastReceiver: BroadcastReceiver(){
                 else -> "-"
             }
             triggeringGeofences.forEach {
+                if(transitionMsg == "Enter"){
+                    volumeChange(it.requestId.toInt(), context)
+                }else if(transitionMsg == "Exit"){
+
+                }
                 Log.e("geofence", "${it.requestId} - $transitionMsg")
             }
         } else {
@@ -38,9 +55,14 @@ class GeofenceBroadcastReceiver: BroadcastReceiver(){
         }
     }
 
-    /*private fun volumeChange(vol: Int, context: Context){
-        var audioManager: AudioManager
-        audioManager = applicationContext.getSystemService(Context.AUDIO_SERVICE) as AudioManager
+    private fun volumeChange(id: Int, context: Context){
+        val audioManager: AudioManager
+        audioManager = context.applicationContext.getSystemService(Context.AUDIO_SERVICE) as AudioManager
+
+        val query = "SELECT volume FROM lists WHERE id = ${id};"
+        val cursor = database.rawQuery(query, null)
+        cursor.moveToNext()
+        val vol = cursor.getString(cursor.getColumnIndex("volume")).toInt()
 
         when(vol){
             0 -> audioManager.ringerMode = AudioManager.RINGER_MODE_VIBRATE
@@ -53,5 +75,5 @@ class GeofenceBroadcastReceiver: BroadcastReceiver(){
                     AudioManager.FLAG_PLAY_SOUND)
             }
         }
-    }*/
+    }
 }

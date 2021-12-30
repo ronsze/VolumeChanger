@@ -1,20 +1,12 @@
 package com.example.volumechanger
 
-import android.app.PendingIntent
-import android.content.BroadcastReceiver
-import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.database.sqlite.SQLiteDatabase
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.os.IBinder
-import android.util.Log
-import android.widget.Toast
 import androidx.core.app.ActivityCompat
 import com.example.volumechanger.databinding.ActivityMainBinding
-import com.google.android.gms.location.*
-import com.naver.maps.geometry.LatLng
 
 class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
@@ -51,8 +43,8 @@ class MainActivity : AppCompatActivity() {
 
     private fun initList(): MutableList<ListViewItem>{
         val items = mutableListOf<ListViewItem>()
-        var query = "SELECT name, point FROM lists;"
-        var cursor = database.rawQuery(query, null)
+        val query = "SELECT name, point FROM lists;"
+        val cursor = database.rawQuery(query, null)
         while(cursor.moveToNext()){
             items.add(ListViewItem(cursor.getString(0), cursor.getString(1), cursor.getString(1)))
         }
