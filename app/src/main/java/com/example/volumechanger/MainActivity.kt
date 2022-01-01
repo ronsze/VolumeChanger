@@ -5,11 +5,16 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.database.sqlite.SQLiteDatabase
+import android.location.Address
+import android.location.Geocoder
 import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import androidx.core.app.ActivityCompat
 import com.example.volumechanger.databinding.ActivityMainBinding
+import com.naver.maps.geometry.LatLng
+import java.io.IOException
+import java.util.*
 
 class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
@@ -50,12 +55,34 @@ class MainActivity : AppCompatActivity() {
         val query = "SELECT name, point FROM lists;"
         val cursor = database.rawQuery(query, null)
         while(cursor.moveToNext()){
-            items.add(ListViewItem(cursor.getString(0), cursor.getString(1), cursor.getString(1)))
+            val name = cursor.getString(cursor.getColumnIndex("name"))
+            val latLng = cursor.getString(cursor.getColumnIndex("point")).split(",")
+            val lat = latLng[0].toDouble()
+            val lng = latLng[1].toDouble()
+            val address = getAddress(LatLng(lat, lng)).substring(4)
+            items.add(ListViewItem(name, cursor.getString(cursor.getColumnIndex("point")), address))
         }
         val adapter = LocListAdapater(items)
         binding.locList.adapter = adapter
 
         return items
+    }
+
+    private fun getAddress(latLng: LatLng): String{
+        var mGeoCoder = Geocoder(applicationContext, Locale.KOREA)
+        var mResultList: List<Address>? = null
+        try{
+            mResultList = mGeoCoder.getFromLocation(
+                    latLng.latitude, latLng.longitude, 1
+            )
+        }catch (e: IOException){
+            e.printStackTrace()
+        }
+        if(mResultList != null){
+            return mResultList[0].getAddressLine(0)
+        }else{
+            return "null"
+        }
     }
 
     private fun getPermission(){

@@ -20,12 +20,14 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:textSize = "20sp"
+        android:paddingVertical="3dp"
         android:gravity="center"
         android:text="범위" />
 
     <Spinner
         android:id="@+id/spinner"
         android:layout_width="match_parent"
+        android:gravity="center_vertical"
         android:layout_height="wrap_content" />
 
     <SeekBar
@@ -33,6 +35,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:max="100"
+        android:paddingVertical="2dp"
         android:min="0"/>
 
     <LinearLayout
@@ -45,6 +48,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="1"
+            android:padding="3dp"
             android:text="최대" />
 
         <Button
@@ -52,6 +56,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="1"
+            android:padding="3dp"
             android:text="진동" />
 
         <Button
@@ -59,6 +64,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="1"
+            android:padding="3dp"
             android:text="무음" />
     </LinearLayout>
 

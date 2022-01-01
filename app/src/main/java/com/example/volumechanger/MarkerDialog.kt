@@ -2,7 +2,6 @@ package com.example.volumechanger
 
 import android.app.Dialog
 import android.content.Context
-import android.database.sqlite.SQLiteDatabase
 import android.view.WindowManager
 import android.widget.*
 
@@ -27,7 +26,9 @@ class MarkerDialog (context: Context){
         var muteFlag = false ; var vibFlag = false
         var vol = 0 ; var range = 0
 
-        spin.adapter = ArrayAdapter.createFromResource(dialog.context, R.array.rangeList, android.R.layout.simple_spinner_item)
+        val adapter = ArrayAdapter.createFromResource(dialog.context, R.array.rangeList, android.R.layout.simple_spinner_item)
+        adapter.setDropDownViewResource(R.layout.spinner_item)
+        spin.adapter = adapter
 
         okBtn.setOnClickListener {
             if(muteFlag) vol = 0
@@ -61,6 +62,11 @@ class MarkerDialog (context: Context){
 
         maxBtn.setOnClickListener {
             volBar.setProgress(volBar.max)
+            vibFlag = false
+            muteFlag = false
+        }
+
+        volBar.setOnClickListener {
             vibFlag = false
             muteFlag = false
         }

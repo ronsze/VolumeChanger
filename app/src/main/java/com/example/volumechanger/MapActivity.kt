@@ -1,12 +1,16 @@
 package com.example.volumechanger
 
 import android.app.PendingIntent
+import android.content.DialogInterface
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.database.sqlite.SQLiteDatabase
+import android.graphics.Color
+import android.location.Location
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
+import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.core.app.ActivityCompat
 import com.example.volumechanger.databinding.ActivityMapBinding
@@ -16,7 +20,9 @@ import com.naver.maps.map.CameraPosition
 import com.naver.maps.map.MapView
 import com.naver.maps.map.NaverMap
 import com.naver.maps.map.OnMapReadyCallback
+import com.naver.maps.map.overlay.CircleOverlay
 import com.naver.maps.map.overlay.Marker
+import java.util.*
 
 class MapActivity : AppCompatActivity(), OnMapReadyCallback {
     companion object{
@@ -30,6 +36,11 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
     val geofenceList: MutableList<Geofence> by lazy{
         mutableListOf()
     }
+    val circleArray: MutableList<CircleOverlay> by lazy{
+        mutableListOf()
+    }
+
+    val context = this
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -59,23 +70,46 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
             dialog.showDia()
             dialog.setOnClickListener(object : MarkerDialog.ButtonOnClickLister{
                 override fun onClicked(name: String, range: Int, volume: Int) {
-                    val point = "${latLng.latitude},${latLng.longitude}"
-                    var query = "INSERT INTO lists('name', 'range', 'volume', 'point') values('${name}', '${range}', '${volume}', '${point}');"
-                    database.execSQL(query)
+                    if(checkOverlap(latLng, range)){
+                        Toast.makeText(context, "다른 장소와 겹칩니다.", Toast.LENGTH_SHORT).show()
+                    }else{
+                        val point = "${latLng.latitude},${latLng.longitude}"
+                        var query = "INSERT INTO lists('name', 'range', 'volume', 'point') values('${name}', '${range}', '${volume}', '${point}');"
+                        database.execSQL(query)
 
-                    query = "SELECT id FROM lists WHERE point = '${point}';"
-                    val cursor = database.rawQuery(query, null)
-                    cursor.moveToNext()
+                        query = "SELECT id FROM lists WHERE point = '${point}';"
+                        val cursor = database.rawQuery(query, null)
+                        cursor.moveToNext()
 
-                    val id = cursor.getString(0)
-                    val geofence = getGeofence(id, LatLng(latLng.latitude, latLng.longitude), range.toFloat())
-                    geofenceList.add(geofence)
-                    createMarker(id.toInt(), latLng)
-                    addGeofences()
+                        val id = cursor.getString(0)
+                        val geofence = getGeofence(id, LatLng(latLng.latitude, latLng.longitude), range.toFloat())
+                        geofenceList.add(geofence)
+                        createMarker(id.toInt(), latLng, range)
+                        addGeofences()
+                    }
                 }
             })
         }
     }
+    private fun checkOverlap(latLng: LatLng, range: Int): Boolean{
+        var query = "SELECT range, point FROM lists;"
+        val cursor = database.rawQuery(query, null)
+        var isOverlap = false
+        while(cursor.moveToNext()){
+            val dbRange = cursor.getString(cursor.getColumnIndex("range")).toInt()
+            val point = cursor.getString(cursor.getColumnIndex("point")).split(",")
+            val lat = point[0].toDouble()
+            val lng = point[1].toDouble()
+            val distance = floatArrayOf(1.0f)
+            Location.distanceBetween(latLng.latitude, latLng.longitude, lat, lng, distance)
+            if(distance[0] < range+dbRange){
+                isOverlap = true
+                break
+            }
+        }
+        return isOverlap
+    }
+
     private fun getInitPoint(): LatLng{
         lateinit var pointF: LatLng
         val select = intent.getStringExtra("select")
@@ -92,44 +126,77 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
 
     private fun initMarkers(){
         val query: String
-        query = "SELECT * FROM lists;"
+        query = "SELECT id, point, range FROM lists;"
         val cursor = database.rawQuery(query, null)
         while(cursor.moveToNext()){
             val latLng = cursor.getString(cursor.getColumnIndex("point")).toString().split(",")
             val lat = latLng[0].toDouble()
             val lng = latLng[1].toDouble()
-            val id = cursor.getString(0).toInt()
-            createMarker(id, LatLng(lat, lng))
+            val id = cursor.getString(cursor.getColumnIndex("id")).toInt()
+            val range = cursor.getShort(cursor.getColumnIndex("range")).toInt()
+            createMarker(id, LatLng(lat, lng), range)
         }
     }
 
-    private fun createMarker(id: Int, latLng: LatLng){
+    private fun createMarker(id: Int, latLng: LatLng, range: Int){
         val marker = Marker()
+        val circle = CircleOverlay()
         marker.position = latLng
         marker.setOnClickListener {
-            val items = arrayOf("수정", "삭제")
             val builder = AlertDialog.Builder(this)
-                    .setTitle("위치 이름")
-                    .setItems(items){ dialog, which ->
-                        if(items[which] == "수정"){
-                            reviseMarker()
-                        }else if(items[which] == "삭제"){
-                            delMarker(marker)
-                        }
-                    }
+                    .setTitle("삭제하시겠습니까?")
+                    .setPositiveButton("예",
+                    DialogInterface.OnClickListener { dialog, which ->
+                        delMarker(marker)
+                    })
+                    .setNegativeButton("아니오",
+                    DialogInterface.OnClickListener { dialog, which ->
+                    })
                     .show()
             false
         }
-        marker.map = naverMap
+        circle.center = latLng
+        circle.radius = range.toDouble()
+        circle.tag = id
+        circle.color = Color.TRANSPARENT
+        circle.outlineWidth = 5
+        circle.outlineColor = getColorM(1)
+
+        marker.iconTintColor = getColorM(2)
         marker.tag = id
+        circle.map = naverMap
+        marker.map = naverMap
+        circleArray.add(circle)
     }
 
-    private fun reviseMarker(){
-        Log.e("마커", "수정")
+    private fun getColorM(mode: Int): Int{
+        val random = Random()
+        var num = random.nextInt(4)
+        if(mode == 1) num += 4
+        val color: Int by lazy{
+            when(num){
+                0 -> Color.RED
+                1 -> Color.BLUE
+                2 -> Color.GREEN
+                3 -> Color.YELLOW
+                4 -> Color.CYAN
+                5 -> Color.GRAY
+                6 -> Color.MAGENTA
+                7 -> Color.BLACK
+                else -> Color.BLACK
+            }
+        }
+        return color
     }
-
     private fun delMarker(marker: Marker){
+        val id = marker.tag
         marker.map = null
+        for (i in circleArray){
+            if(i.tag == id){
+                i.map = null
+                break
+            }
+        }
         database.execSQL("DELETE FROM lists WHERE id = ${marker.tag}")
         removeGeofences()
 
@@ -138,7 +205,7 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
     private fun changeCamPos(latLng: LatLng){
         val camPos = CameraPosition(
                 latLng,
-                9.0
+                16.0
         )
         naverMap.cameraPosition = camPos
     }
@@ -191,7 +258,7 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
     private fun updateGeofences(){
         val query = "SELECT id, range, point FROM lists;"
         val cursor = database.rawQuery(query, null)
-        if(cursor != null){
+        if(cursor.count > 0){
             while(cursor.moveToNext()){
                 val id = cursor.getString(cursor.getColumnIndex("id"))
                 val point = cursor.getString(cursor.getColumnIndex("point")).split(",")
