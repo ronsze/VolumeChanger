@@ -6,10 +6,13 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.database.sqlite.SQLiteDatabase
 import android.graphics.Color
+import android.location.Address
+import android.location.Geocoder
 import android.location.Location
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
+import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.core.app.ActivityCompat
@@ -22,6 +25,7 @@ import com.naver.maps.map.NaverMap
 import com.naver.maps.map.OnMapReadyCallback
 import com.naver.maps.map.overlay.CircleOverlay
 import com.naver.maps.map.overlay.Marker
+import java.io.IOException
 import java.util.*
 
 class MapActivity : AppCompatActivity(), OnMapReadyCallback {
@@ -56,6 +60,10 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
         mapView = binding.mapView
         mapView.onCreate(savedInstanceState)
         mapView.getMapAsync(this)
+
+        binding.searchBtn.setOnClickListener{
+            searchAddress(binding.searchText.text.toString())
+        }
     }
 
     override fun onMapReady(map: NaverMap) {
@@ -142,9 +150,13 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
         val marker = Marker()
         val circle = CircleOverlay()
         marker.position = latLng
+        val query = "SELECT name FROM lists WHERE id = ${id};"
+        val cursor = database.rawQuery(query, null)
+        cursor.moveToNext()
+        val name = cursor.getString(cursor.getColumnIndex("name"))
         marker.setOnClickListener {
             val builder = AlertDialog.Builder(this)
-                    .setTitle("삭제하시겠습니까?")
+                    .setTitle("삭제하시겠습니까? [${name}]")
                     .setPositiveButton("예",
                     DialogInterface.OnClickListener { dialog, which ->
                         delMarker(marker)
@@ -276,5 +288,26 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
             setInitialTrigger(GeofencingRequest.INITIAL_TRIGGER_ENTER)
             addGeofences(list)
         }.build()
+    }
+
+    private fun searchAddress(address: String){
+        val addr = address.replace(" ", "")
+        lateinit var list: MutableList<Address>
+        try{
+            list = Geocoder(context).getFromLocationName(addr, 5)
+        }catch(e: IOException){
+           e.printStackTrace()
+           Toast.makeText(context, "Error", Toast.LENGTH_SHORT).show()
+        }
+
+        if(list.size == 0){
+            Toast.makeText(context, "일치하는 주소가 없습니다.", Toast.LENGTH_SHORT).show()
+        }else{
+            val address = list.get(0)
+            val lat = address.latitude
+            val lng = address.longitude
+
+            changeCamPos(LatLng(lat, lng))
+        }
     }
 }

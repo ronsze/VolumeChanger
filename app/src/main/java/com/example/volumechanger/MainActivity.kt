@@ -10,6 +10,7 @@ import android.location.Geocoder
 import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.util.Log
 import androidx.core.app.ActivityCompat
 import com.example.volumechanger.databinding.ActivityMainBinding
 import com.naver.maps.geometry.LatLng
@@ -20,8 +21,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
     lateinit var dbHelper: DBHelper
     lateinit var database: SQLiteDatabase
-    var permissions = arrayOf(android.Manifest.permission.ACCESS_FINE_LOCATION,
-        android.Manifest.permission.ACCESS_BACKGROUND_LOCATION)
+    lateinit var items: MutableList<ListViewItem>
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -34,11 +34,12 @@ class MainActivity : AppCompatActivity() {
 
         getPermission()
 
-        val items: MutableList<ListViewItem> = initList()
+        items = initList()
 
         val intent = Intent(this, MapActivity::class.java)
 
         binding.locList.setOnItemClickListener { parent, view, position, id ->
+            Log.e("리스트","${items}")
             intent.putExtra("select", "item")
             intent.putExtra("point", items[position].point)
             startActivity(intent)
@@ -86,17 +87,21 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun getPermission(){
+        if(ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED){
+            Log.e("인증", "방해금지3")
+            ActivityCompat.requestPermissions(this, arrayOf(android.Manifest.permission.ACCESS_FINE_LOCATION), 100)
+        }
+
+        Log.e("인증", "방해금지2")
         var notificationManager = this.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         if(Build.VERSION.SDK_INT >= 23){
             if(!notificationManager.isNotificationPolicyAccessGranted){
+                Log.e("인증", "방해금지")
                 this.startActivity(Intent(android.provider.Settings.ACTION_NOTIFICATION_POLICY_ACCESS_SETTINGS))
             }
         }
 
-        if(ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
-            || ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_BACKGROUND_LOCATION) != PackageManager.PERMISSION_GRANTED){
-            ActivityCompat.requestPermissions(this, permissions, 100)
-        }
+
     }
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
@@ -104,14 +109,17 @@ class MainActivity : AppCompatActivity() {
         if(requestCode === 100){
             if(grantResults.size > 0){
                 for(grant in grantResults){
-                    if(grant != PackageManager.PERMISSION_GRANTED) System.exit(0)
+                    if(grant != PackageManager.PERMISSION_GRANTED){
+                        Log.e("인증", "${grant}")
+                        System.exit(0)
+                    }
                 }
             }
         }
     }
 
     override fun onResume() {
-        initList()
+        items = initList()
         super.onResume()
     }
 }

@@ -18,14 +18,15 @@
             android:id="@+id/search_text"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginHorizontal="3dp"
+            android:layout_weight="1"
             android:background="@color/white"
             android:ems="10"
+            android:hint="주소 검색"
+            android:textColorHint = "@color/black"
             android:inputType="textPersonName"
-            android:layout_weight="1"
             android:paddingVertical="10dp"
-            android:layout_marginHorizontal="3dp"
-            android:textColor = "@color/black"
-            android:text="주소 검색" />
+            android:textColor="@color/black" />
 
         <ImageButton
             android:id="@+id/search_btn"

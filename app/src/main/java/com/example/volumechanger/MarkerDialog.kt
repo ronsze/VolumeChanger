@@ -2,6 +2,8 @@ package com.example.volumechanger
 
 import android.app.Dialog
 import android.content.Context
+import android.graphics.Color
+import android.graphics.drawable.ColorDrawable
 import android.view.WindowManager
 import android.widget.*
 
@@ -10,7 +12,8 @@ class MarkerDialog (context: Context){
 
     fun showDia(){
         dialog.setContentView(R.layout.create_marker_custom_dialog)
-        dialog.window!!.setLayout(WindowManager.LayoutParams.MATCH_PARENT,
+        dialog.window!!.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+        dialog.window!!.setLayout(WindowManager.LayoutParams.WRAP_CONTENT,
                                     WindowManager.LayoutParams.WRAP_CONTENT)
         dialog.setCanceledOnTouchOutside(true)
         dialog.setCancelable(true)
@@ -26,7 +29,7 @@ class MarkerDialog (context: Context){
         var muteFlag = false ; var vibFlag = false
         var vol = 0 ; var range = 0
 
-        val adapter = ArrayAdapter.createFromResource(dialog.context, R.array.rangeList, android.R.layout.simple_spinner_item)
+        val adapter = ArrayAdapter.createFromResource(dialog.context, R.array.rangeList, R.layout.spinner_item)
         adapter.setDropDownViewResource(R.layout.spinner_item)
         spin.adapter = adapter
 
