@@ -4,6 +4,7 @@
     <option name="filePathToZoomLevelMap">
       <map>
         <entry key="..\:/Users/zeorns/AndroidStudioProjects/VolumeChanger/app/src/main/res/drawable/border_bottom.xml" value="0.36302083333333335" />
+        <entry key="..\:/Users/zeorns/AndroidStudioProjects/VolumeChanger/app/src/main/res/drawable/mainIcon_background.xml" value="0.42962962962962964" />
         <entry key="..\:/Users/zeorns/AndroidStudioProjects/VolumeChanger/app/src/main/res/drawable/radius_rect_background.xml" value="0.39897435897435896" />
         <entry key="..\:/Users/zeorns/AndroidStudioProjects/VolumeChanger/app/src/main/res/drawable/radius_rect_background_white.xml" value="0.42962962962962964" />
         <entry key="..\:/Users/zeorns/AndroidStudioProjects/VolumeChanger/app/src/main/res/layout/activity_main.xml" value="0.3890625" />
@@ -12,6 +13,9 @@
         <entry key="..\:/Users/zeorns/AndroidStudioProjects/VolumeChanger/app/src/main/res/layout/create_marker_custom_dialog.xml" value="0.29583333333333334" />
         <entry key="..\:/Users/zeorns/AndroidStudioProjects/VolumeChanger/app/src/main/res/layout/loc_list_custom.xml" value="0.3651041666666667" />
         <entry key="..\:/Users/zeorns/AndroidStudioProjects/VolumeChanger/app/src/main/res/layout/spinner_item.xml" value="0.42864583333333334" />
+        <entry key="..\:/Users/zeorns/AndroidStudioProjects/VolumeChanger/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml" value="0.42962962962962964" />
+        <entry key="..\:/Users/zeorns/AndroidStudioProjects/VolumeChanger/app/src/main/res/mipmap-anydpi-v26/mainIcon.xml" value="0.42962962962962964" />
+        <entry key="..\:/Users/zeorns/AndroidStudioProjects/VolumeChanger/app/src/main/res/mipmap-anydpi-v26/mainIcon_round.xml" value="0.42962962962962964" />
       </map>
     </option>
   </component>
