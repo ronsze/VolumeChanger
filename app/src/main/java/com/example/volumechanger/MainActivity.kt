@@ -88,15 +88,12 @@ class MainActivity : AppCompatActivity() {
 
     private fun getPermission(){
         if(ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED){
-            Log.e("인증", "방해금지3")
             ActivityCompat.requestPermissions(this, arrayOf(android.Manifest.permission.ACCESS_FINE_LOCATION), 100)
         }
 
-        Log.e("인증", "방해금지2")
         var notificationManager = this.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         if(Build.VERSION.SDK_INT >= 23){
             if(!notificationManager.isNotificationPolicyAccessGranted){
-                Log.e("인증", "방해금지")
                 this.startActivity(Intent(android.provider.Settings.ACTION_NOTIFICATION_POLICY_ACCESS_SETTINGS))
             }
         }
@@ -110,7 +107,6 @@ class MainActivity : AppCompatActivity() {
             if(grantResults.size > 0){
                 for(grant in grantResults){
                     if(grant != PackageManager.PERMISSION_GRANTED){
-                        Log.e("인증", "${grant}")
                         System.exit(0)
                     }
                 }

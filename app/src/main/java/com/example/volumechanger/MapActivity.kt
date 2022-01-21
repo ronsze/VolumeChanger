@@ -61,6 +61,12 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
         mapView.onCreate(savedInstanceState)
         mapView.getMapAsync(this)
 
+        val query = "SELECT * FROM lists"
+        val cursor = database.rawQuery(query, null)
+        if(cursor.count == 0){
+            howToDialog()
+        }
+
         binding.searchBtn.setOnClickListener{
             searchAddress(binding.searchText.text.toString())
         }
@@ -309,5 +315,12 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
 
             changeCamPos(LatLng(lat, lng))
         }
+    }
+
+    private fun howToDialog(){
+        val dialog = AlertDialog.Builder(context)
+            .setTitle("사용법")
+            .setMessage("화면을 꾹 누르면\n원하는 장소를\n추가할 수 있습니다.")
+            .show()
     }
 }
