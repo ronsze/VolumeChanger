@@ -138,20 +138,22 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
 
     private fun searchAddress(address: String){
         val addr = address.replace(" ", "")
-        lateinit var list: MutableList<Address>
-        try{
-            list = Geocoder(context).getFromLocationName(addr, 5)
-        }catch(e: IOException){
-            e.printStackTrace()
-            Toast.makeText(context, "Error", Toast.LENGTH_SHORT).show()
-        }
+        if(addr != ""){
+            lateinit var list: MutableList<Address>
+            try{
+                list = Geocoder(context).getFromLocationName(addr, 5)
+            }catch(e: IOException){
+                e.printStackTrace()
+                Toast.makeText(context, "Error", Toast.LENGTH_SHORT).show()
+            }
 
-        if(list.size == 0){
-            Toast.makeText(context, "일치하는 주소가 없습니다.", Toast.LENGTH_SHORT).show()
-        }else{
-            changeCamPos(LatLng(list.get(0).latitude, list.get(0).longitude), 16.0)
+            if(list.size == 0){
+                Toast.makeText(context, "일치하는 주소가 없습니다.", Toast.LENGTH_SHORT).show()
+            }else{
+                changeCamPos(LatLng(list.get(0).latitude, list.get(0).longitude), 16.0)
+            }
+            imm.hideSoftInputFromWindow(binding.searchText.windowToken, 0)
         }
-        imm.hideSoftInputFromWindow(binding.searchText.windowToken, 0)
     }
 //ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡMarkers and overlayㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ
     private fun initMarkers(){
