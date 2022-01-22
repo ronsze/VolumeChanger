@@ -1,6 +1,7 @@
 package com.example.volumechanger
 
 import android.app.PendingIntent
+import android.content.Context
 import android.content.DialogInterface
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -12,7 +13,6 @@ import android.location.Location
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
-import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.core.app.ActivityCompat
@@ -32,19 +32,18 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
     companion object{
         lateinit var naverMap: NaverMap
     }
+
+    private val context = this
     private lateinit var mapView: MapView
     private lateinit var binding: ActivityMapBinding
+
     lateinit var dbHelper: DBHelper
     lateinit var database: SQLiteDatabase
     lateinit var geofencingClient: GeofencingClient
-    val geofenceList: MutableList<Geofence> by lazy{
-        mutableListOf()
-    }
-    val circleArray: MutableList<CircleOverlay> by lazy{
-        mutableListOf()
-    }
 
-    val context = this
+    val geofenceList: MutableList<Geofence> by lazy{ mutableListOf() }
+    val circleArray: MutableList<CircleOverlay> by lazy{ mutableListOf() }
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -61,21 +60,18 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
         mapView.onCreate(savedInstanceState)
         mapView.getMapAsync(this)
 
-        val query = "SELECT * FROM lists"
-        val cursor = database.rawQuery(query, null)
-        if(cursor.count == 0){
-            howToDialog()
-        }
+        showHowTo()
+
 
         binding.searchBtn.setOnClickListener{
             searchAddress(binding.searchText.text.toString())
         }
     }
-
+//ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡMapㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ
     override fun onMapReady(map: NaverMap) {
         naverMap = map
 
-        val initLoc = getInitPoint()
+        val initLoc = getInitLoc()
         changeCamPos(initLoc)
         initMarkers()
 
@@ -86,16 +82,17 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
                 override fun onClicked(name: String, range: Int, volume: Int) {
                     if(checkOverlap(latLng, range)){
                         Toast.makeText(context, "다른 장소와 겹칩니다.", Toast.LENGTH_SHORT).show()
-                    }else{
-                        val point = "${latLng.latitude},${latLng.longitude}"
-                        var query = "INSERT INTO lists('name', 'range', 'volume', 'point') values('${name}', '${range}', '${volume}', '${point}');"
+                    }
+                    else{
+                        val location = "${latLng.latitude},${latLng.longitude}"
+                        var query = "INSERT INTO lists('name', 'range', 'volume', 'location') values('${name}', '${range}', '${volume}', '${location}');"
                         database.execSQL(query)
 
-                        query = "SELECT id FROM lists WHERE point = '${point}';"
+                        query = "SELECT id FROM lists WHERE location = '${location}';"
                         val cursor = database.rawQuery(query, null)
                         cursor.moveToNext()
 
-                        val id = cursor.getString(0)
+                        val id = cursor.getString(cursor.getColumnIndex("id"))
                         val geofence = getGeofence(id, LatLng(latLng.latitude, latLng.longitude), range.toFloat())
                         geofenceList.add(geofence)
                         createMarker(id.toInt(), latLng, range)
@@ -105,86 +102,114 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
             })
         }
     }
-    private fun checkOverlap(latLng: LatLng, range: Int): Boolean{
-        var query = "SELECT range, point FROM lists;"
-        val cursor = database.rawQuery(query, null)
-        var isOverlap = false
-        while(cursor.moveToNext()){
-            val dbRange = cursor.getString(cursor.getColumnIndex("range")).toInt()
-            val point = cursor.getString(cursor.getColumnIndex("point")).split(",")
-            val lat = point[0].toDouble()
-            val lng = point[1].toDouble()
-            val distance = floatArrayOf(1.0f)
-            Location.distanceBetween(latLng.latitude, latLng.longitude, lat, lng, distance)
-            if(distance[0] < range+dbRange){
-                isOverlap = true
-                break
-            }
-        }
-        return isOverlap
-    }
 
-    private fun getInitPoint(): LatLng{
-        lateinit var pointF: LatLng
+    private fun getInitLoc(): LatLng{
         val select = intent.getStringExtra("select")
         if(select == "item"){
-            val point = intent.getStringExtra("point")!!.split(",")
-            val lat = point[0].toDouble()
-            val lng = point[1].toDouble()
-            pointF = LatLng(lat, lng)
+            val location = intent.getStringExtra("location")!!.split(",")
+            val lat = location[0].toDouble() ; val lng = location[1].toDouble()
+            return LatLng(lat, lng)
         }else{
-            pointF = LatLng(33.38, 126.55)
+            return LatLng(33.38, 126.55)
         }
-        return pointF
     }
 
+    private fun changeCamPos(latLng: LatLng){
+        val camPos = CameraPosition(
+            latLng,
+            16.0
+        )
+        naverMap.cameraPosition = camPos
+    }
+
+    private fun searchAddress(address: String){
+        val addr = address.replace(" ", "")
+        lateinit var list: MutableList<Address>
+        try{
+            list = Geocoder(context).getFromLocationName(addr, 5)
+        }catch(e: IOException){
+            e.printStackTrace()
+            Toast.makeText(context, "Error", Toast.LENGTH_SHORT).show()
+        }
+
+        if(list.size == 0){
+            Toast.makeText(context, "일치하는 주소가 없습니다.", Toast.LENGTH_SHORT).show()
+        }else{
+            changeCamPos(LatLng(list.get(0).latitude, list.get(0).longitude))
+        }
+    }
+//ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡMarkers and overlayㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ
     private fun initMarkers(){
-        val query: String
-        query = "SELECT id, point, range FROM lists;"
+        val query = "SELECT id, location, range FROM lists;"
         val cursor = database.rawQuery(query, null)
         while(cursor.moveToNext()){
-            val latLng = cursor.getString(cursor.getColumnIndex("point")).toString().split(",")
-            val lat = latLng[0].toDouble()
-            val lng = latLng[1].toDouble()
             val id = cursor.getString(cursor.getColumnIndex("id")).toInt()
+            val location = cursor.getString(cursor.getColumnIndex("location")).toString().split(",")
+            val lat = location[0].toDouble() ; val lng = location[1].toDouble()
             val range = cursor.getShort(cursor.getColumnIndex("range")).toInt()
             createMarker(id, LatLng(lat, lng), range)
         }
     }
 
     private fun createMarker(id: Int, latLng: LatLng, range: Int){
-        val marker = Marker()
-        val circle = CircleOverlay()
-        marker.position = latLng
+        val marker = getMarker(id, latLng)
+        val circle = getCircle(id, latLng, range)
+
         val query = "SELECT name FROM lists WHERE id = ${id};"
         val cursor = database.rawQuery(query, null)
         cursor.moveToNext()
+
         val name = cursor.getString(cursor.getColumnIndex("name"))
         marker.setOnClickListener {
             val builder = AlertDialog.Builder(this)
-                    .setTitle("삭제하시겠습니까? [${name}]")
-                    .setPositiveButton("예",
+                .setTitle("삭제하시겠습니까? [${name}]")
+                .setPositiveButton("예",
                     DialogInterface.OnClickListener { dialog, which ->
                         delMarker(marker)
                     })
-                    .setNegativeButton("아니오",
+                .setNegativeButton("아니오",
                     DialogInterface.OnClickListener { dialog, which ->
                     })
-                    .show()
+                .show()
             false
         }
+
+        circle.map = naverMap
+        circleArray.add(circle)
+
+        marker.map = naverMap
+    }
+
+    private fun getMarker(id: Int, latLng: LatLng): Marker{
+        val marker = Marker()
+        marker.position = latLng
+        marker.iconTintColor = getColorM(2)
+        marker.tag = id
+        return marker
+    }
+
+    private fun getCircle(id: Int, latLng: LatLng, range: Int): CircleOverlay{
+        val circle = CircleOverlay()
         circle.center = latLng
         circle.radius = range.toDouble()
         circle.tag = id
         circle.color = Color.TRANSPARENT
         circle.outlineWidth = 5
         circle.outlineColor = getColorM(1)
+        return circle
+    }
 
-        marker.iconTintColor = getColorM(2)
-        marker.tag = id
-        circle.map = naverMap
-        marker.map = naverMap
-        circleArray.add(circle)
+    private fun delMarker(marker: Marker){
+        val id = marker.tag
+        marker.map = null
+        for (i in circleArray){
+            if(i.tag == id){
+                i.map = null
+                break
+            }
+        }
+        database.execSQL("DELETE FROM lists WHERE id = ${marker.tag}")
+        removeGeofences()
     }
 
     private fun getColorM(mode: Int): Int{
@@ -206,28 +231,22 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
         }
         return color
     }
-    private fun delMarker(marker: Marker){
-        val id = marker.tag
-        marker.map = null
-        for (i in circleArray){
-            if(i.tag == id){
-                i.map = null
-                break
-            }
+
+    private fun checkOverlap(latLng: LatLng, range: Int): Boolean{
+        val query = "SELECT range, location FROM lists;"
+        val cursor = database.rawQuery(query, null)
+
+        while(cursor.moveToNext()){
+            val dbRange = cursor.getString(cursor.getColumnIndex("range")).toInt()
+            val location = cursor.getString(cursor.getColumnIndex("location")).split(",")
+            val lat = location[0].toDouble() ; val lng = location[1].toDouble()
+            val distance = floatArrayOf(1.0f)
+            Location.distanceBetween(latLng.latitude, latLng.longitude, lat, lng, distance)
+            if(distance[0] < range+dbRange) return true
         }
-        database.execSQL("DELETE FROM lists WHERE id = ${marker.tag}")
-        removeGeofences()
-
+        return false
     }
-
-    private fun changeCamPos(latLng: LatLng){
-        val camPos = CameraPosition(
-                latLng,
-                16.0
-        )
-        naverMap.cameraPosition = camPos
-    }
-
+//ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡGeofenceㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ
     private fun getGeofence(reqId: String, geo: LatLng, radius: Float): Geofence {
         return Geofence.Builder()
             .setRequestId(reqId)
@@ -274,14 +293,13 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
     }
 
     private fun updateGeofences(){
-        val query = "SELECT id, range, point FROM lists;"
+        val query = "SELECT id, range, location FROM lists;"
         val cursor = database.rawQuery(query, null)
         if(cursor.count > 0){
             while(cursor.moveToNext()){
                 val id = cursor.getString(cursor.getColumnIndex("id"))
-                val point = cursor.getString(cursor.getColumnIndex("point")).split(",")
-                val lat = point[0].toDouble()
-                val lng = point[1].toDouble()
+                val location = cursor.getString(cursor.getColumnIndex("location")).split(",")
+                val lat = location[0].toDouble() ; val lng = location[1].toDouble()
                 val range = cursor.getString(cursor.getColumnIndex("range"))
                 geofenceList.add(getGeofence(id, LatLng(lat, lng), range.toFloat()))
             }
@@ -296,31 +314,14 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
         }.build()
     }
 
-    private fun searchAddress(address: String){
-        val addr = address.replace(" ", "")
-        lateinit var list: MutableList<Address>
-        try{
-            list = Geocoder(context).getFromLocationName(addr, 5)
-        }catch(e: IOException){
-           e.printStackTrace()
-           Toast.makeText(context, "Error", Toast.LENGTH_SHORT).show()
+    private fun showHowTo(){
+        val query = "SELECT * FROM lists"
+        val cursor = database.rawQuery(query, null)
+        if(cursor.count == 0){
+            val dialog = AlertDialog.Builder(context)
+                .setTitle("사용법")
+                .setMessage("화면을 꾹 누르면\n원하는 장소를\n추가할 수 있습니다.")
+                .show()
         }
-
-        if(list.size == 0){
-            Toast.makeText(context, "일치하는 주소가 없습니다.", Toast.LENGTH_SHORT).show()
-        }else{
-            val address = list.get(0)
-            val lat = address.latitude
-            val lng = address.longitude
-
-            changeCamPos(LatLng(lat, lng))
-        }
-    }
-
-    private fun howToDialog(){
-        val dialog = AlertDialog.Builder(context)
-            .setTitle("사용법")
-            .setMessage("화면을 꾹 누르면\n원하는 장소를\n추가할 수 있습니다.")
-            .show()
     }
 }

@@ -7,7 +7,7 @@ import android.widget.BaseAdapter
 import android.widget.Button
 import android.widget.TextView
 
-data class ListViewItem(val name: String, val point: String, val address: String)
+data class ListViewItem(val name: String, val location: String)
 
 class LocListAdapater (private val items: MutableList<ListViewItem>): BaseAdapter() {
     override fun getCount(): Int = items.size
@@ -21,11 +21,9 @@ class LocListAdapater (private val items: MutableList<ListViewItem>): BaseAdapte
 
         if(convertView == null) convertView = LayoutInflater.from(parent?.context).inflate(R.layout.loc_list_custom, parent, false)
         val item: ListViewItem = items[position]
-        val name: TextView? = convertView?.findViewById<TextView>(R.id.nametext)
-        val address: TextView? = convertView?.findViewById<TextView>(R.id.addresstext)
+        val name: TextView? = convertView?.findViewById<TextView>(R.id.listItem)
 
         name?.setText(item.name)
-        address?.setText(item.address)
 
         return convertView!!
     }

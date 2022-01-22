@@ -4,21 +4,24 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="#000000"
     android:orientation="vertical"
     tools:context=".MainActivity">
 
     <ListView
         android:id="@+id/loc_list"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_weight="1">
+        android:layout_height="wrap_content"
+        android:layout_margin="20dp">
 
     </ListView>
 
     <Button
-        android:id="@+id/mapBtn"
+        android:id="@+id/addBtn"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:textSize="20sp"
-        android:text="지도" />
+        android:layout_marginHorizontal="20dp"
+        android:paddingVertical="30dp"
+        android:text="추가" />
+
 </LinearLayout>

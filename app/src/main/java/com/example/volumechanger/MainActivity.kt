@@ -1,7 +1,9 @@
 package com.example.volumechanger
 
+import android.app.AlertDialog
 import android.app.NotificationManager
 import android.content.Context
+import android.content.DialogInterface
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.database.sqlite.SQLiteDatabase
@@ -14,6 +16,9 @@ import android.util.Log
 import androidx.core.app.ActivityCompat
 import com.example.volumechanger.databinding.ActivityMainBinding
 import com.naver.maps.geometry.LatLng
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import java.io.IOException
 import java.util.*
 
@@ -34,76 +39,49 @@ class MainActivity : AppCompatActivity() {
 
         getPermission()
 
-        items = initList()
+        items = updateList()
 
-        val intent = Intent(this, MapActivity::class.java)
+        val mapIntent = Intent(this, MapActivity::class.java)
 
         binding.locList.setOnItemClickListener { parent, view, position, id ->
-            Log.e("리스트","${items}")
-            intent.putExtra("select", "item")
-            intent.putExtra("point", items[position].point)
-            startActivity(intent)
+            mapIntent.putExtra("select", "item")
+            mapIntent.putExtra("location", items[position].location)
+            startActivity(mapIntent)
         }
 
-        binding.mapBtn.setOnClickListener {
-            intent.putExtra("select", "button")
-            startActivity(intent)
-        }
-    }
-
-    private fun initList(): MutableList<ListViewItem>{
-        val items = mutableListOf<ListViewItem>()
-        val query = "SELECT name, point FROM lists;"
-        val cursor = database.rawQuery(query, null)
-        while(cursor.moveToNext()){
-            val name = cursor.getString(cursor.getColumnIndex("name"))
-            val latLng = cursor.getString(cursor.getColumnIndex("point")).split(",")
-            val lat = latLng[0].toDouble()
-            val lng = latLng[1].toDouble()
-            val address = getAddress(LatLng(lat, lng)).substring(4)
-            items.add(ListViewItem(name, cursor.getString(cursor.getColumnIndex("point")), address))
-        }
-        val adapter = LocListAdapater(items)
-        binding.locList.adapter = adapter
-
-        return items
-    }
-
-    private fun getAddress(latLng: LatLng): String{
-        var mGeoCoder = Geocoder(applicationContext, Locale.KOREA)
-        var mResultList: List<Address>? = null
-        try{
-            mResultList = mGeoCoder.getFromLocation(
-                    latLng.latitude, latLng.longitude, 1
-            )
-        }catch (e: IOException){
-            e.printStackTrace()
-        }
-        if(mResultList != null){
-            return mResultList[0].getAddressLine(0)
-        }else{
-            return "null"
+        binding.addBtn.setOnClickListener {
+            mapIntent.putExtra("select", "button")
+            startActivity(mapIntent)
         }
     }
-
+//ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡPermissionㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ
     private fun getPermission(){
         if(ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED){
             ActivityCompat.requestPermissions(this, arrayOf(android.Manifest.permission.ACCESS_FINE_LOCATION), 100)
         }
 
-        var notificationManager = this.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        val notificationManager = this.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         if(Build.VERSION.SDK_INT >= 23){
             if(!notificationManager.isNotificationPolicyAccessGranted){
-                this.startActivity(Intent(android.provider.Settings.ACTION_NOTIFICATION_POLICY_ACCESS_SETTINGS))
+                val builder = AlertDialog.Builder(this)
+                    .setTitle("권한 요청")
+                    .setMessage("볼륨 조절을 위해\n방해 금지 권한이\n필요합니다.")
+                    .setPositiveButton("확인",
+                        DialogInterface.OnClickListener{ dialog, which ->
+                            this.startActivity(Intent(android.provider.Settings.ACTION_NOTIFICATION_POLICY_ACCESS_SETTINGS))
+                        })
+                    .setNegativeButton("취소",
+                        DialogInterface.OnClickListener{ dialog, which ->
+                            System.exit(0)
+                        })
+                    .show()
             }
         }
-
-
     }
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        if(requestCode === 100){
+        if(requestCode == 100){
             if(grantResults.size > 0){
                 for(grant in grantResults){
                     if(grant != PackageManager.PERMISSION_GRANTED){
@@ -114,8 +92,24 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    fun updateList(): MutableList<ListViewItem>{
+        val items = mutableListOf<ListViewItem>()
+        val query = "SELECT name, location FROM lists;"
+        val cursor = database.rawQuery(query, null)
+
+        while(cursor.moveToNext()){
+            val name = cursor.getString(cursor.getColumnIndex("name"))
+            items.add(ListViewItem(name, cursor.getString(cursor.getColumnIndex("location"))))
+        }
+
+        val adapter = LocListAdapater(items)
+        binding.locList.adapter = adapter
+
+        return items
+    }
+
     override fun onResume() {
-        items = initList()
+        items = updateList()
         super.onResume()
     }
 }

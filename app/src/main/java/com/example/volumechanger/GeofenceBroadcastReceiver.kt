@@ -21,9 +21,11 @@ class GeofenceBroadcastReceiver: BroadcastReceiver(){
             Log.e("GeofenceErr", "Context is unvalid")
             return
         }
-        val geofencingEvent = GeofencingEvent.fromIntent(intent)
+
         dbHelper = DBHelper(context, "newdb.db", null, 1)
         database = dbHelper.writableDatabase
+
+        val geofencingEvent = GeofencingEvent.fromIntent(intent)
 
         if (geofencingEvent.hasError()) {
             Log.e("GeofenceErr", GeofenceStatusCodes.getStatusCodeString(geofencingEvent.errorCode))
@@ -31,6 +33,7 @@ class GeofenceBroadcastReceiver: BroadcastReceiver(){
         }else{
             Log.e("GeofenceErr", "NoErr")
         }
+
         val geofenceTransaction = geofencingEvent.geofenceTransition
 
         if (geofenceTransaction == Geofence.GEOFENCE_TRANSITION_ENTER ||
@@ -57,12 +60,12 @@ class GeofenceBroadcastReceiver: BroadcastReceiver(){
 
     fun volumeChange(id: Int, context: Context) {
         val audioManager: AudioManager
-        audioManager =
-            context.applicationContext.getSystemService(Context.AUDIO_SERVICE) as AudioManager
+        audioManager = context.applicationContext.getSystemService(Context.AUDIO_SERVICE) as AudioManager
 
         val query = "SELECT volume FROM lists WHERE id = ${id};"
         val cursor = database.rawQuery(query, null)
         cursor.moveToNext()
+
         val vol = cursor.getString(cursor.getColumnIndex("volume")).toInt()
         when (vol) {
             0 -> audioManager.ringerMode = AudioManager.RINGER_MODE_SILENT
@@ -74,7 +77,6 @@ class GeofenceBroadcastReceiver: BroadcastReceiver(){
                     (audioManager.getStreamMaxVolume(AudioManager.STREAM_RING) * vol/100.0).toInt(),
                     AudioManager.FLAG_PLAY_SOUND
                 )
-                Log.e("volumeChange", "volume : ${vol}")
             }
         }
     }
