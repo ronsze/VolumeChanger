@@ -34,9 +34,12 @@ class MarkerDialog (context: Context){
         spin.adapter = adapter
 
         okBtn.setOnClickListener {
-            if(muteFlag) vol = 0
-            else if(vibFlag)  vol = -1
-            else vol = volBar.progress
+            if(volBar.progress == 0){
+                if(muteFlag) vol = 0
+                else if(vibFlag)  vol = -1
+            }else{
+                vol = volBar.progress
+            }
 
             if(spin.selectedItem == "100m") range = 100
             else if(spin.selectedItem == "200m") range = 200

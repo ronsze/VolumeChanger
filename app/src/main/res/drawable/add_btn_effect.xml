@@ -2,7 +2,6 @@
 <ripple xmlns:android="http://schemas.android.com/apk/res/android"
     android:color="#303030"> <!-- 이펙트 색상 -->
 
-
     <!-- 배경 색상 -->
     <item android:id="@android:id/background">
         <shape android:shape="rectangle">

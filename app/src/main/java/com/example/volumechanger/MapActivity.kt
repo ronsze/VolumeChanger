@@ -13,6 +13,9 @@ import android.location.Location
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
+import android.view.inputmethod.EditorInfo
+import android.view.inputmethod.InputMethodManager
+import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.core.app.ActivityCompat
@@ -44,6 +47,8 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
     val geofenceList: MutableList<Geofence> by lazy{ mutableListOf() }
     val circleArray: MutableList<CircleOverlay> by lazy{ mutableListOf() }
 
+    lateinit var imm: InputMethodManager
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -61,18 +66,27 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
         mapView.getMapAsync(this)
 
         showHowTo()
-
+        imm = getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
+        imm.showSoftInput(binding.searchText, 0)
 
         binding.searchBtn.setOnClickListener{
             searchAddress(binding.searchText.text.toString())
+        }
+
+        binding.searchText.setOnEditorActionListener { textView, i, keyEvent ->
+            var handled = false
+            if(i == EditorInfo.IME_ACTION_DONE){
+                searchAddress(binding.searchText.text.toString())
+                handled = true
+            }
+            handled
         }
     }
 //ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡMapㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ
     override fun onMapReady(map: NaverMap) {
         naverMap = map
 
-        val initLoc = getInitLoc()
-        changeCamPos(initLoc)
+        getInitLoc()
         initMarkers()
 
         naverMap.setOnMapLongClickListener { pointF, latLng ->
@@ -103,21 +117,21 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
         }
     }
 
-    private fun getInitLoc(): LatLng{
+    private fun getInitLoc(){
         val select = intent.getStringExtra("select")
         if(select == "item"){
             val location = intent.getStringExtra("location")!!.split(",")
             val lat = location[0].toDouble() ; val lng = location[1].toDouble()
-            return LatLng(lat, lng)
+            changeCamPos(LatLng(lat, lng),14.0)
         }else{
-            return LatLng(33.38, 126.55)
+            changeCamPos(LatLng(37.58667, 126.97482), 12.0)
         }
     }
 
-    private fun changeCamPos(latLng: LatLng){
+    private fun changeCamPos(latLng: LatLng, zoom: Double){
         val camPos = CameraPosition(
             latLng,
-            16.0
+            zoom
         )
         naverMap.cameraPosition = camPos
     }
@@ -135,8 +149,9 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
         if(list.size == 0){
             Toast.makeText(context, "일치하는 주소가 없습니다.", Toast.LENGTH_SHORT).show()
         }else{
-            changeCamPos(LatLng(list.get(0).latitude, list.get(0).longitude))
+            changeCamPos(LatLng(list.get(0).latitude, list.get(0).longitude), 16.0)
         }
+        imm.hideSoftInputFromWindow(binding.searchText.windowToken, 0)
     }
 //ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡMarkers and overlayㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ
     private fun initMarkers(){
@@ -270,10 +285,10 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
             == PackageManager.PERMISSION_GRANTED){
             geofencingClient.addGeofences(getGeofencingRequest(geofenceList), geoPending).run{
                 addOnSuccessListener {
-                    Log.e("addGeo", "add Success")
+
                 }
                 addOnFailureListener {
-                    Log.e("addGeo", "add Fail")
+
                 }
             }
         }
@@ -282,12 +297,12 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
     private fun removeGeofences(){
         geofencingClient.removeGeofences(geoPending).run{
             addOnSuccessListener {
-                Log.e("removeGeo", "remove Success")
+
                 geofenceList.clear()
                 updateGeofences()
             }
             addOnFailureListener{
-                Log.e("removeGeo", "remove Fail")
+
             }
         }
     }
@@ -320,7 +335,7 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
         if(cursor.count == 0){
             val dialog = AlertDialog.Builder(context)
                 .setTitle("사용법")
-                .setMessage("화면을 꾹 누르면\n원하는 장소를\n추가할 수 있습니다.")
+                .setMessage("화면을 꾹 누르면 원하는\n장소를 추가할 수 있습니다.\n지우고 싶을 땐 마커를 터치해주세요.")
                 .show()
         }
     }

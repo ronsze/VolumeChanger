@@ -31,7 +31,7 @@ class GeofenceBroadcastReceiver: BroadcastReceiver(){
             Log.e("GeofenceErr", GeofenceStatusCodes.getStatusCodeString(geofencingEvent.errorCode))
             return
         }else{
-            Log.e("GeofenceErr", "NoErr")
+
         }
 
         val geofenceTransaction = geofencingEvent.geofenceTransition
@@ -51,10 +51,10 @@ class GeofenceBroadcastReceiver: BroadcastReceiver(){
                 }else if(transitionMsg == "Exit"){
 
                 }
-                Log.e("geofence", "${it.requestId} - $transitionMsg")
+
             }
         } else {
-            Log.e("geofence", "Unknown")
+
         }
     }
 
