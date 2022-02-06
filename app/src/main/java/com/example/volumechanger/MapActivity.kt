@@ -1,5 +1,6 @@
 package com.example.volumechanger
 
+import android.annotation.SuppressLint
 import android.app.PendingIntent
 import android.content.Context
 import android.content.DialogInterface
@@ -31,6 +32,7 @@ import com.naver.maps.map.overlay.Marker
 import java.io.IOException
 import java.util.*
 
+@SuppressLint("Range")
 class MapActivity : AppCompatActivity(), OnMapReadyCallback {
     companion object{
         lateinit var naverMap: NaverMap
@@ -93,6 +95,7 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
             val dialog = MarkerDialog(this)
             dialog.showDia()
             dialog.setOnClickListener(object : MarkerDialog.ButtonOnClickLister{
+
                 override fun onClicked(name: String, range: Int, volume: Int) {
                     if(checkOverlap(latLng, range)){
                         Toast.makeText(context, "다른 장소와 겹칩니다.", Toast.LENGTH_SHORT).show()
@@ -287,10 +290,10 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
             == PackageManager.PERMISSION_GRANTED){
             geofencingClient.addGeofences(getGeofencingRequest(geofenceList), geoPending).run{
                 addOnSuccessListener {
-
+                    Log.e("addGeofence", "Success")
                 }
                 addOnFailureListener {
-
+                    Log.e("addGeofence", "Fail")
                 }
             }
         }
@@ -299,12 +302,12 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
     private fun removeGeofences(){
         geofencingClient.removeGeofences(geoPending).run{
             addOnSuccessListener {
-
+                Log.e("removeGeofence", "Success")
                 geofenceList.clear()
                 updateGeofences()
             }
             addOnFailureListener{
-
+                Log.e("removeGeofence", "Fail")
             }
         }
     }

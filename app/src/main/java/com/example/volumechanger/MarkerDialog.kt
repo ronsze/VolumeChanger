@@ -41,10 +41,12 @@ class MarkerDialog (context: Context){
                 vol = volBar.progress
             }
 
-            if(spin.selectedItem == "100m") range = 100
-            else if(spin.selectedItem == "200m") range = 200
-            else if(spin.selectedItem == "300m") range = 300
-            else if(spin.selectedItem == "500m") range = 500
+            when(spin.selectedItem){
+                "100m" -> range = 100
+                "200m" -> range = 200
+                "300m" -> range = 300
+                "500m" -> range = 500
+            }
 
             onClikedListener.onClicked(nameEdt.text.toString(), range, vol)
             dialog.dismiss()
@@ -56,23 +58,18 @@ class MarkerDialog (context: Context){
 
         vibBtn.setOnClickListener {
             volBar.setProgress(0)
-            vibFlag = !vibFlag
+            vibFlag = true
             muteFlag = false
         }
 
         muteBtn.setOnClickListener {
             volBar.setProgress(0)
             vibFlag = false
-            muteFlag = !muteFlag
+            muteFlag = true
         }
 
         maxBtn.setOnClickListener {
             volBar.setProgress(volBar.max)
-            vibFlag = false
-            muteFlag = false
-        }
-
-        volBar.setOnClickListener {
             vibFlag = false
             muteFlag = false
         }

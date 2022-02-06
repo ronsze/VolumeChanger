@@ -26,7 +26,10 @@
         <receiver android:name=".GeofenceBroadcastReceiver"/>
         <meta-data
             android:name="com.naver.maps.map.CLIENT_ID"
-            android:value="5dmemz2dyr" />
+            android:value="5dmemz2dyr"/>
+        <meta-data
+            android:name="com.google.android.gms.ads.APPLICATION_ID"
+            android:value="ca-app-pub-3940256099942544~6300978111"/>
     </application>
 
 </manifest>

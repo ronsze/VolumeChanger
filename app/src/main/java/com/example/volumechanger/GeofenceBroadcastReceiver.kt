@@ -47,15 +47,13 @@ class GeofenceBroadcastReceiver: BroadcastReceiver(){
             }
             triggeringGeofences.forEach {
                 if(transitionMsg == "Enter"){
+                    Log.e("Geofence", "Enter")
                     volumeChange(it.requestId.toInt(), context)
                 }else if(transitionMsg == "Exit"){
-
+                    Log.e("Geofence", "Exit")
                 }
-
             }
-        } else {
-
-        }
+        } else { }
     }
 
     fun volumeChange(id: Int, context: Context) {
@@ -66,19 +64,20 @@ class GeofenceBroadcastReceiver: BroadcastReceiver(){
         val cursor = database.rawQuery(query, null)
         cursor.moveToNext()
 
-        val vol = cursor.getString(cursor.getColumnIndex("volume")).toInt()
-        when (vol) {
-            0 -> audioManager.ringerMode = AudioManager.RINGER_MODE_SILENT
-            -1 -> audioManager.ringerMode = AudioManager.RINGER_MODE_VIBRATE
-            else -> {
-                audioManager.ringerMode = AudioManager.RINGER_MODE_NORMAL
-                audioManager.setStreamVolume(
-                    AudioManager.STREAM_RING,
-                    (audioManager.getStreamMaxVolume(AudioManager.STREAM_RING) * vol/100.0).toInt(),
-                    AudioManager.FLAG_PLAY_SOUND
-                )
+        if(cursor.count > 0){
+            val vol = cursor.getString(0).toInt()
+            when (vol) {
+                0 -> audioManager.ringerMode = AudioManager.RINGER_MODE_SILENT
+                -1 -> audioManager.ringerMode = AudioManager.RINGER_MODE_VIBRATE
+                else -> {
+                    audioManager.ringerMode = AudioManager.RINGER_MODE_NORMAL
+                    audioManager.setStreamVolume(
+                        AudioManager.STREAM_RING,
+                        (audioManager.getStreamMaxVolume(AudioManager.STREAM_RING) * vol/100.0).toInt(),
+                        AudioManager.FLAG_PLAY_SOUND
+                    )
+                }
             }
         }
     }
-
 }

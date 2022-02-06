@@ -1,5 +1,6 @@
 package com.example.volumechanger
 
+import android.annotation.SuppressLint
 import android.app.AlertDialog
 import android.app.NotificationManager
 import android.content.Context
@@ -7,23 +8,16 @@ import android.content.DialogInterface
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.database.sqlite.SQLiteDatabase
-import android.location.Address
-import android.location.Geocoder
 import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.util.Log
-import android.view.View
-import android.widget.Button
 import androidx.core.app.ActivityCompat
 import com.example.volumechanger.databinding.ActivityMainBinding
-import com.naver.maps.geometry.LatLng
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import java.io.IOException
-import java.util.*
+import com.google.android.gms.ads.AdRequest
+import com.google.android.gms.ads.AdSize
+import com.google.android.gms.ads.AdView
 
+@SuppressLint("Range")
 class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
     lateinit var dbHelper: DBHelper
@@ -55,6 +49,12 @@ class MainActivity : AppCompatActivity() {
             mapIntent.putExtra("select", "button")
             startActivity(mapIntent)
         }
+
+        val sdRequest = AdRequest.Builder().build()
+        binding.adView.loadAd(sdRequest)
+        val adView = AdView(this)
+        adView.adSize = AdSize.BANNER
+        adView.adUnitId = "\n"+"ca-app-pub-3940256099942544/6300978111\n"
     }
 //ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡPermissionㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ
     private fun getPermission(){
