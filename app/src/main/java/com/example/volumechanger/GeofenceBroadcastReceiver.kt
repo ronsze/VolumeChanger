@@ -30,8 +30,6 @@ class GeofenceBroadcastReceiver: BroadcastReceiver(){
         if (geofencingEvent.hasError()) {
             Log.e("GeofenceErr", GeofenceStatusCodes.getStatusCodeString(geofencingEvent.errorCode))
             return
-        }else{
-
         }
 
         val geofenceTransaction = geofencingEvent.geofenceTransition
@@ -53,7 +51,9 @@ class GeofenceBroadcastReceiver: BroadcastReceiver(){
                     Log.e("Geofence", "Exit")
                 }
             }
-        } else { }
+        } else {
+            Log.e("GeofenceReceiver", "트랜잭션 불일치")
+        }
     }
 
     fun volumeChange(id: Int, context: Context) {
