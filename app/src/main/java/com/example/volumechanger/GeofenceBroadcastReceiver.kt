@@ -13,17 +13,12 @@ import com.google.android.gms.location.GeofenceStatusCodes
 import com.google.android.gms.location.GeofencingEvent
 
 class GeofenceBroadcastReceiver: BroadcastReceiver(){
-    lateinit var dbHelper: DBHelper
-    lateinit var database: SQLiteDatabase
 
     override fun onReceive(context: Context?, intent: Intent?) {
         if(context == null){
             Log.e("GeofenceErr", "Context is unvalid")
             return
         }
-
-        dbHelper = DBHelper(context, "newdb.db", null, 1)
-        database = dbHelper.writableDatabase
 
         val geofencingEvent = GeofencingEvent.fromIntent(intent!!)
 
@@ -61,7 +56,7 @@ class GeofenceBroadcastReceiver: BroadcastReceiver(){
         audioManager = context.applicationContext.getSystemService(Context.AUDIO_SERVICE) as AudioManager
 
         val query = "SELECT volume FROM lists WHERE id = ${id};"
-        val cursor = database.rawQuery(query, null)
+        val cursor = App.database.rawQuery(query, null)
         cursor.moveToNext()
 
         if(cursor.count > 0){

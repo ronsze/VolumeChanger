@@ -18,8 +18,6 @@ import androidx.databinding.DataBindingUtil
 @SuppressLint("Range")
 class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
-    lateinit var dbHelper: DBHelper
-    lateinit var database: SQLiteDatabase
     lateinit var items: MutableList<ListViewItem>
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -27,9 +25,6 @@ class MainActivity : AppCompatActivity() {
         binding = DataBindingUtil.setContentView(this, R.layout.activity_main)
 
         binding.lifecycleOwner = this
-
-        dbHelper = DBHelper(this, "newdb.db", null, 1)
-        database = dbHelper.writableDatabase
 
         getPermission()
 
@@ -90,7 +85,7 @@ class MainActivity : AppCompatActivity() {
     fun updateList(): MutableList<ListViewItem>{
         val items = mutableListOf<ListViewItem>()
         val query = "SELECT name, location FROM lists;"
-        val cursor = database.rawQuery(query, null)
+        val cursor = App.database.rawQuery(query, null)
 
         while(cursor.moveToNext()){
             val name = cursor.getString(cursor.getColumnIndex("name"))
