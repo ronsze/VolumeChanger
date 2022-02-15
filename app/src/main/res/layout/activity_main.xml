@@ -1,55 +1,53 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:background="#000000"
-    android:orientation="vertical"
-    tools:context=".MainActivity">
+    xmlns:tools="http://schemas.android.com/tools">
 
-    <ScrollView
-        android:layout_weight="1"
+    <data>
+        <variable
+            name="main"
+            type="com.example.volumechanger.MainActivity" />
+    </data>
+
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:fillViewport="true">
+        android:background="#000000"
+        android:orientation="vertical"
+        tools:context=".MainActivity">
 
-        <LinearLayout
+        <ScrollView
+            android:layout_weight="1"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical">
+            android:layout_height="match_parent"
+            android:fillViewport="true">
 
-            <Button
-                android:id="@+id/addBtn"
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginHorizontal="20dp"
-                android:background="@drawable/add_btn_effect"
-                android:gravity="center"
-                android:paddingVertical="5dp"
-                android:text="+"
-                android:textSize="50dp"/>
+                android:orientation="vertical">
 
-            <ListView
-                android:id="@+id/loc_list"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:background="@drawable/list_border_vertical"
-                android:scrollbars="none"/>
+                <Button
+                    android:id="@+id/addBtn"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginHorizontal="20dp"
+                    android:background="@drawable/add_btn_effect"
+                    android:gravity="center"
+                    android:paddingVertical="5dp"
+                    android:text="+"
+                    android:textSize="50dp"/>
 
-        </LinearLayout>
-    </ScrollView>
+                <ListView
+                    android:id="@+id/loc_list"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/list_border_vertical"
+                    android:scrollbars="none"/>
 
-    <com.google.android.gms.ads.AdView
-        xmlns:ads="http://schemas.android.com/apk/res-auto"
-        android:layout_gravity="center"
-        android:id="@+id/adView"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_centerHorizontal="true"
-        android:layout_alignParentBottom="true"
-        ads:adSize="BANNER"
-        ads:adUnitId="ca-app-pub-3940256099942544/6300978111">
-    </com.google.android.gms.ads.AdView>
+            </LinearLayout>
+        </ScrollView>
 
-</LinearLayout>
+    </LinearLayout>
+
+</layout>

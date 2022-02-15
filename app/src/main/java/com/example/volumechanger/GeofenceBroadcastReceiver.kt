@@ -25,7 +25,7 @@ class GeofenceBroadcastReceiver: BroadcastReceiver(){
         dbHelper = DBHelper(context, "newdb.db", null, 1)
         database = dbHelper.writableDatabase
 
-        val geofencingEvent = GeofencingEvent.fromIntent(intent)
+        val geofencingEvent = GeofencingEvent.fromIntent(intent!!)
 
         if (geofencingEvent.hasError()) {
             Log.e("GeofenceErr", GeofenceStatusCodes.getStatusCodeString(geofencingEvent.errorCode))

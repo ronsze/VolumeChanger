@@ -20,6 +20,7 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.core.app.ActivityCompat
+import androidx.databinding.DataBindingUtil
 import com.example.volumechanger.databinding.ActivityMapBinding
 import com.google.android.gms.location.*
 import com.naver.maps.geometry.LatLng
@@ -54,9 +55,9 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        binding = ActivityMapBinding.inflate(layoutInflater)
-        val view = binding.root
-        setContentView(view)
+        binding = DataBindingUtil.setContentView(this, R.layout.activity_map)
+
+        binding.lifecycleOwner = this
 
         geofencingClient = LocationServices.getGeofencingClient(this)
 
@@ -293,7 +294,7 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
                     Log.e("addGeofence", "Success")
                 }
                 addOnFailureListener {
-                    Log.e("addGeofence", "Fail")
+                    Log.e("addGeofence", "${it}")
                 }
             }
         }

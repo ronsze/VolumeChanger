@@ -13,9 +13,7 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import androidx.core.app.ActivityCompat
 import com.example.volumechanger.databinding.ActivityMainBinding
-import com.google.android.gms.ads.AdRequest
-import com.google.android.gms.ads.AdSize
-import com.google.android.gms.ads.AdView
+import androidx.databinding.DataBindingUtil
 
 @SuppressLint("Range")
 class MainActivity : AppCompatActivity() {
@@ -26,9 +24,9 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        binding = ActivityMainBinding.inflate(layoutInflater)
-        val view = binding.root
-        setContentView(view)
+        binding = DataBindingUtil.setContentView(this, R.layout.activity_main)
+
+        binding.lifecycleOwner = this
 
         dbHelper = DBHelper(this, "newdb.db", null, 1)
         database = dbHelper.writableDatabase
@@ -49,18 +47,12 @@ class MainActivity : AppCompatActivity() {
             mapIntent.putExtra("select", "button")
             startActivity(mapIntent)
         }
-
-        val sdRequest = AdRequest.Builder().build()
-        binding.adView.loadAd(sdRequest)
-        val adView = AdView(this)
-        adView.adSize = AdSize.BANNER
-        adView.adUnitId = "\n"+"ca-app-pub-3940256099942544/6300978111\n"
     }
 //ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡPermissionㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ
     private fun getPermission(){
-        if(ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED){
-            ActivityCompat.requestPermissions(this, arrayOf(android.Manifest.permission.ACCESS_FINE_LOCATION,
-                android.Manifest.permission.ACCESS_BACKGROUND_LOCATION), 100)
+        if(ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
+        || ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_BACKGROUND_LOCATION) != PackageManager.PERMISSION_GRANTED){
+            ActivityCompat.requestPermissions(this, arrayOf(android.Manifest.permission.ACCESS_FINE_LOCATION, android.Manifest.permission.ACCESS_BACKGROUND_LOCATION), 100)
         }
 
         val notificationManager = this.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
