@@ -59,18 +59,20 @@ class GeofenceBroadcastReceiver: BroadcastReceiver(){
         val cursor = App.database.rawQuery(query, null)
         cursor.moveToNext()
 
-        if(cursor.count > 0){
-            val vol = cursor.getString(0).toInt()
-            when (vol) {
-                0 -> audioManager.ringerMode = AudioManager.RINGER_MODE_SILENT
-                -1 -> audioManager.ringerMode = AudioManager.RINGER_MODE_VIBRATE
-                else -> {
-                    audioManager.ringerMode = AudioManager.RINGER_MODE_NORMAL
-                    audioManager.setStreamVolume(
-                        AudioManager.STREAM_RING,
-                        (audioManager.getStreamMaxVolume(AudioManager.STREAM_RING) * vol/100.0).toInt(),
-                        AudioManager.FLAG_PLAY_SOUND
-                    )
+        with(audioManager){
+            if(cursor.count > 0){
+                val vol = cursor.getString(0).toInt()
+                when (vol) {
+                    0 -> ringerMode = AudioManager.RINGER_MODE_SILENT
+                    -1 -> ringerMode = AudioManager.RINGER_MODE_VIBRATE
+                    else -> {
+                        ringerMode = AudioManager.RINGER_MODE_NORMAL
+                        setStreamVolume(
+                            AudioManager.STREAM_RING,
+                            (getStreamMaxVolume(AudioManager.STREAM_RING) * vol/100.0).toInt(),
+                            AudioManager.FLAG_PLAY_SOUND
+                        )
+                    }
                 }
             }
         }

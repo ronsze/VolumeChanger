@@ -100,14 +100,8 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
                     }
                     else{
                         val location = "${latLng.latitude},${latLng.longitude}"
-                        var query = "INSERT INTO lists('name', 'range', 'volume', 'location') values('${name}', '${range}', '${volume}', '${location}');"
-                        App.database.execSQL(query)
 
-                        query = "SELECT id FROM lists WHERE location = '${location}';"
-                        val cursor = App.database.rawQuery(query, null)
-                        cursor.moveToNext()
-
-                        val id = cursor.getString(cursor.getColumnIndex("id"))
+                        val id = insertLocToDB(name, range, volume, location)
 
                         val geofence = getGeofence(id, LatLng(latLng.latitude, latLng.longitude), range.toFloat())
                         geofenceList.add(geofence)
@@ -117,6 +111,19 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
                 }
             })
         }
+    }
+
+    private fun insertLocToDB(name: String, range: Int, volume: Int, location: String): String{
+        var query = "INSERT INTO lists('name', 'range', 'volume', 'location') values('${name}', '${range}', '${volume}', '${location}');"
+        App.database.execSQL(query)
+
+        query = "SELECT id FROM lists WHERE location = '${location}';"
+        val cursor = App.database.rawQuery(query, null)
+        cursor.moveToNext()
+
+        val id = cursor.getString(cursor.getColumnIndex("id"))
+
+        return id
     }
 
     private fun setInitLoc(){
