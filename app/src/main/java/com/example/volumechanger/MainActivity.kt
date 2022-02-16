@@ -11,6 +11,8 @@ import android.database.sqlite.SQLiteDatabase
 import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.view.View
+import android.widget.AdapterView
 import androidx.core.app.ActivityCompat
 import com.example.volumechanger.databinding.ActivityMainBinding
 import androidx.databinding.DataBindingUtil
@@ -18,23 +20,19 @@ import androidx.databinding.DataBindingUtil
 @SuppressLint("Range")
 class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
-    lateinit var items: MutableList<ListViewItem>
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = DataBindingUtil.setContentView(this, R.layout.activity_main)
-
         binding.lifecycleOwner = this
 
-        getPermission()
-
-        items = updateList()
+        checkPermission()
 
         val mapIntent = Intent(this, MapActivity::class.java)
 
         binding.locList.setOnItemClickListener { parent, view, position, id ->
             mapIntent.putExtra("select", "item")
-            mapIntent.putExtra("location", items[position].location)
+            mapIntent.putExtra("location", App.items[position].location)
             startActivity(mapIntent)
         }
 
@@ -43,8 +41,9 @@ class MainActivity : AppCompatActivity() {
             startActivity(mapIntent)
         }
     }
+
 //ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡPermissionㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ
-    private fun getPermission(){
+    private fun checkPermission(){
         if(ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
         || ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_BACKGROUND_LOCATION) != PackageManager.PERMISSION_GRANTED){
             ActivityCompat.requestPermissions(this, arrayOf(android.Manifest.permission.ACCESS_FINE_LOCATION, android.Manifest.permission.ACCESS_BACKGROUND_LOCATION), 100)
@@ -82,24 +81,25 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    fun updateList(): MutableList<ListViewItem>{
-        val items = mutableListOf<ListViewItem>()
+    fun updateList(){
+        App.items.clear()
         val query = "SELECT name, location FROM lists;"
         val cursor = App.database.rawQuery(query, null)
 
-        while(cursor.moveToNext()){
-            val name = cursor.getString(cursor.getColumnIndex("name"))
-            items.add(ListViewItem(name, cursor.getString(cursor.getColumnIndex("location"))))
+        with(cursor){
+            while(moveToNext()){
+                val name = getString(getColumnIndex("name"))
+                App.items.add(ListViewItem(name, getString(getColumnIndex("location"))))
+            }
         }
 
-        val adapter = LocListAdapater(items)
-        binding.locList.adapter = adapter
 
-        return items
+        val adapter = LocListAdapater(App.items)
+        binding.locList.adapter = adapter
     }
 
     override fun onResume() {
-        items = updateList()
+        updateList()
         super.onResume()
     }
 }

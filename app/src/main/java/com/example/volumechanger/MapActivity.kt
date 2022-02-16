@@ -36,6 +36,8 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
     companion object{
         lateinit var naverMap: NaverMap
     }
+    private val defaultLoc = LatLng(37.58667, 126.97482)
+    private val defaultZoomLv = 12.0
 
     private val context = this
     private lateinit var mapView: MapView
@@ -46,24 +48,21 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
     val geofenceList: MutableList<Geofence> by lazy{ mutableListOf() }
     val circleArray: MutableList<CircleOverlay> by lazy{ mutableListOf() }
 
-    lateinit var imm: InputMethodManager
+    lateinit var inputManager: InputMethodManager
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = DataBindingUtil.setContentView(this, R.layout.activity_map)
-
         binding.lifecycleOwner = this
 
         geofencingClient = LocationServices.getGeofencingClient(this)
 
-        mapView = binding.mapView
-        mapView.onCreate(savedInstanceState)
-        mapView.getMapAsync(this)
-
+        readyMap(savedInstanceState)
         showHowTo()
-        imm = getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
-        imm.showSoftInput(binding.searchText, 0)
+
+        inputManager = getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
+        inputManager.showSoftInput(binding.searchText, 0)
 
         binding.searchBtn.setOnClickListener{
             searchAddress(binding.searchText.text.toString())
@@ -78,11 +77,17 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
             handled
         }
     }
+
+    private fun readyMap(savedInstanceState: Bundle?){
+        mapView = binding.mapView
+        mapView.onCreate(savedInstanceState)
+        mapView.getMapAsync(this)
+    }
 //ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡMapㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ
     override fun onMapReady(map: NaverMap) {
         naverMap = map
 
-        getInitLoc()
+        setInitLoc()
         initMarkers()
 
         naverMap.setOnMapLongClickListener { pointF, latLng ->
@@ -96,17 +101,11 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
                     }
                     else{
                         val location = "${latLng.latitude},${latLng.longitude}"
-                        var query = "INSERT INTO lists('name', 'range', 'volume', 'location') values('${name}', '${range}', '${volume}', '${location}');"
-                        App.database.execSQL(query)
+                        val id = insertToDB(name, range, volume, location)
 
-                        query = "SELECT id FROM lists WHERE location = '${location}';"
-                        val cursor = App.database.rawQuery(query, null)
-                        cursor.moveToNext()
-
-                        val id = cursor.getString(cursor.getColumnIndex("id"))
                         val geofence = getGeofence(id, LatLng(latLng.latitude, latLng.longitude), range.toFloat())
                         geofenceList.add(geofence)
-                        createMarker(id.toInt(), latLng, range)
+                        createMarker(id.toInt(), name, latLng, range)
                         addGeofences()
                     }
                 }
@@ -114,14 +113,27 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
         }
     }
 
-    private fun getInitLoc(){
+    private fun insertToDB(name: String, range: Int, volume: Int, location: String): String{
+        var query = "INSERT INTO lists('name', 'range', 'volume', 'location') values('${name}', '${range}', '${volume}', '${location}');"
+        App.database.execSQL(query)
+
+        query = "SELECT id FROM lists WHERE location = '${location}';"
+        val cursor = App.database.rawQuery(query, null)
+        cursor.moveToNext()
+
+        val id = cursor.getString(cursor.getColumnIndex("id"))
+
+        return id
+    }
+
+    private fun setInitLoc(){
         val select = intent.getStringExtra("select")
         if(select == "item"){
             val location = intent.getStringExtra("location")!!.split(",")
             val lat = location[0].toDouble() ; val lng = location[1].toDouble()
             changeCamPos(LatLng(lat, lng),14.0)
         }else{
-            changeCamPos(LatLng(37.58667, 126.97482), 12.0)
+            changeCamPos(defaultLoc, defaultZoomLv)
         }
     }
 
@@ -149,31 +161,29 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
             }else{
                 changeCamPos(LatLng(list.get(0).latitude, list.get(0).longitude), 16.0)
             }
-            imm.hideSoftInputFromWindow(binding.searchText.windowToken, 0)
+            inputManager.hideSoftInputFromWindow(binding.searchText.windowToken, 0)
         }
     }
 //ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡMarkers and overlayㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ
     private fun initMarkers(){
-        val query = "SELECT id, location, range FROM lists;"
+        val query = "SELECT id, name, location, range FROM lists;"
         val cursor = App.database.rawQuery(query, null)
-        while(cursor.moveToNext()){
-            val id = cursor.getString(cursor.getColumnIndex("id")).toInt()
-            val location = cursor.getString(cursor.getColumnIndex("location")).toString().split(",")
-            val lat = location[0].toDouble() ; val lng = location[1].toDouble()
-            val range = cursor.getShort(cursor.getColumnIndex("range")).toInt()
-            createMarker(id, LatLng(lat, lng), range)
+        with(cursor){
+            while(moveToNext()){
+                val id = getString(getColumnIndex("id")).toInt()
+                val name = getString(getColumnIndex("name"))
+                val location = getString(getColumnIndex("location")).toString().split(",")
+                val lat = location[0].toDouble() ; val lng = location[1].toDouble()
+                val range = getShort(getColumnIndex("range")).toInt()
+                createMarker(id, name, LatLng(lat, lng), range)
+            }
         }
     }
 
-    private fun createMarker(id: Int, latLng: LatLng, range: Int){
+    private fun createMarker(id: Int, name: String, latLng: LatLng, range: Int){
         val marker = getMarker(id, latLng)
         val circle = getCircle(id, latLng, range)
 
-        val query = "SELECT name FROM lists WHERE id = ${id};"
-        val cursor = App.database.rawQuery(query, null)
-        cursor.moveToNext()
-
-        val name = cursor.getString(cursor.getColumnIndex("name"))
         marker.setOnClickListener {
             val builder = AlertDialog.Builder(this)
                 .setTitle("삭제하시겠습니까? [${name}]")
@@ -196,20 +206,24 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
 
     private fun getMarker(id: Int, latLng: LatLng): Marker{
         val marker = Marker()
-        marker.position = latLng
-        marker.iconTintColor = getColorM(2)
-        marker.tag = id
+        with(marker){
+            position = latLng
+            iconTintColor = getColorM(2)
+            tag = id
+        }
         return marker
     }
 
     private fun getCircle(id: Int, latLng: LatLng, range: Int): CircleOverlay{
         val circle = CircleOverlay()
-        circle.center = latLng
-        circle.radius = range.toDouble()
-        circle.tag = id
-        circle.color = Color.TRANSPARENT
-        circle.outlineWidth = 5
-        circle.outlineColor = getColorM(1)
+        with(circle){
+            center = latLng
+            radius = range.toDouble()
+            tag = id
+            color = Color.TRANSPARENT
+            outlineWidth = 5
+            outlineColor = getColorM(1)
+        }
         return circle
     }
 
@@ -250,14 +264,17 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
         val query = "SELECT range, location FROM lists;"
         val cursor = App.database.rawQuery(query, null)
 
-        while(cursor.moveToNext()){
-            val dbRange = cursor.getString(cursor.getColumnIndex("range")).toInt()
-            val location = cursor.getString(cursor.getColumnIndex("location")).split(",")
-            val lat = location[0].toDouble() ; val lng = location[1].toDouble()
-            val distance = floatArrayOf(1.0f)
-            Location.distanceBetween(latLng.latitude, latLng.longitude, lat, lng, distance)
-            if(distance[0] < range+dbRange) return true
+        with(cursor){
+            while(moveToNext()){
+                val dbRange = getString(getColumnIndex("range")).toInt()
+                val location = getString(getColumnIndex("location")).split(",")
+                val lat = location[0].toDouble() ; val lng = location[1].toDouble()
+                val distance = floatArrayOf(1.0f)
+                Location.distanceBetween(latLng.latitude, latLng.longitude, lat, lng, distance)
+                if(distance[0] < range+dbRange) return true
+            }
         }
+
         return false
     }
 //ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡGeofenceㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ
@@ -309,15 +326,17 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
     private fun updateGeofences(){
         val query = "SELECT id, range, location FROM lists;"
         val cursor = App.database.rawQuery(query, null)
-        if(cursor.count > 0){
-            while(cursor.moveToNext()){
-                val id = cursor.getString(cursor.getColumnIndex("id"))
-                val location = cursor.getString(cursor.getColumnIndex("location")).split(",")
-                val lat = location[0].toDouble() ; val lng = location[1].toDouble()
-                val range = cursor.getString(cursor.getColumnIndex("range"))
-                geofenceList.add(getGeofence(id, LatLng(lat, lng), range.toFloat()))
+        with(cursor){
+            if(count > 0){
+                while(moveToNext()){
+                    val id = getString(getColumnIndex("id"))
+                    val location = getString(getColumnIndex("location")).split(",")
+                    val lat = location[0].toDouble() ; val lng = location[1].toDouble()
+                    val range = getString(getColumnIndex("range"))
+                    geofenceList.add(getGeofence(id, LatLng(lat, lng), range.toFloat()))
+                }
+                addGeofences()
             }
-            addGeofences()
         }
     }
 

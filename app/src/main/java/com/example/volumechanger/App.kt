@@ -7,6 +7,7 @@ class App: Application() {
     companion object{
         lateinit var dbHelper: DBHelper
         lateinit var database: SQLiteDatabase
+        val items = mutableListOf<ListViewItem>()
     }
 
     override fun onCreate(){
