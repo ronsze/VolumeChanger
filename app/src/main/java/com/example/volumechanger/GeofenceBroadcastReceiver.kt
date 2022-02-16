@@ -51,7 +51,7 @@ class GeofenceBroadcastReceiver: BroadcastReceiver(){
         }
     }
 
-    fun volumeChange(id: Int, context: Context) {
+    private fun volumeChange(id: Int, context: Context) {
         val audioManager: AudioManager
         audioManager = context.applicationContext.getSystemService(Context.AUDIO_SERVICE) as AudioManager
 

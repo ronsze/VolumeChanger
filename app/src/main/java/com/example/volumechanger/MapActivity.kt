@@ -46,12 +46,12 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
     private lateinit var mapView: MapView
     private lateinit var binding: ActivityMapBinding
 
-    lateinit var geofencingClient: GeofencingClient
+    private lateinit var geofencingClient: GeofencingClient
 
-    val geofenceList: MutableList<Geofence> by lazy{ mutableListOf() }
-    val circleArray: MutableList<CircleOverlay> by lazy{ mutableListOf() }
+    private val geofenceList: MutableList<Geofence> by lazy{ mutableListOf() }
+    private val circleArray: MutableList<CircleOverlay> by lazy{ mutableListOf() }
 
-    lateinit var inputManager: InputMethodManager
+    private lateinit var inputManager: InputMethodManager
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -278,7 +278,7 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
             .build()
     }
 
-    val geoPending: PendingIntent by lazy{
+    private val geoPending: PendingIntent by lazy{
         val intent = Intent(this, GeofenceBroadcastReceiver::class.java)
         PendingIntent.getBroadcast(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT)
     }

@@ -16,8 +16,8 @@ class MarkerDialog (context: Context): View.OnClickListener{
     private val dialog = Dialog(context)
     private val diaContext = context
 
-    var muteFlag = false ; var vibFlag = false
-    var vol = 0 ; var range = 0
+    private var muteFlag = false ; var vibFlag = false
+    private var vol = 0 ; var range = 0
 
     fun showDia(){
         binding = DataBindingUtil.inflate(LayoutInflater.from(diaContext), R.layout.create_marker_custom_dialog, null, false)

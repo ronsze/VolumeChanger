@@ -81,7 +81,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    fun updateList(){
+    private fun updateList(){
         App.items.clear()
         val query = "SELECT name, location FROM lists;"
         val cursor = App.database.rawQuery(query, null)
