@@ -36,6 +36,9 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
     companion object{
         lateinit var naverMap: NaverMap
     }
+    private val colorArr = arrayOf(Color.RED, Color.BLUE, Color.GREEN, Color.YELLOW,
+                                Color.CYAN, Color.GRAY, Color.MAGENTA, Color.BLACK)
+
     private val defaultLoc = LatLng(37.58667, 126.97482)
     private val defaultZoomLv = 12.0
 
@@ -208,7 +211,7 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
         val marker = Marker()
         with(marker){
             position = latLng
-            iconTintColor = getColorM(2)
+            iconTintColor = getMyColor(2)
             tag = id
         }
         return marker
@@ -222,7 +225,7 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
             tag = id
             color = Color.TRANSPARENT
             outlineWidth = 5
-            outlineColor = getColorM(1)
+            outlineColor = getMyColor(1)
         }
         return circle
     }
@@ -240,24 +243,11 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
         removeGeofences()
     }
 
-    private fun getColorM(mode: Int): Int{
+    private fun getMyColor(mode: Int): Int{
         val random = Random()
         var num = random.nextInt(4)
         if(mode == 1) num += 4
-        val color: Int by lazy{
-            when(num){
-                0 -> Color.RED
-                1 -> Color.BLUE
-                2 -> Color.GREEN
-                3 -> Color.YELLOW
-                4 -> Color.CYAN
-                5 -> Color.GRAY
-                6 -> Color.MAGENTA
-                7 -> Color.BLACK
-                else -> Color.BLACK
-            }
-        }
-        return color
+        return colorArr[num]
     }
 
     private fun checkOverlap(latLng: LatLng, range: Int): Boolean{

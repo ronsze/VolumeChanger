@@ -1,6 +1,8 @@
 package com.example.volumechanger
 
+import android.annotation.SuppressLint
 import android.app.Application
+import android.database.Cursor
 import android.database.sqlite.SQLiteDatabase
 
 class App: Application() {
