@@ -59,13 +59,15 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
         binding = DataBindingUtil.setContentView(this, R.layout.activity_map)
         binding.lifecycleOwner = this
 
+        mapView = binding.mapView
+        mapView.onCreate(savedInstanceState)
+        mapView.getMapAsync(this)
+
         geofencingClient = LocationServices.getGeofencingClient(this)
-
-        readyMap(savedInstanceState)
-        showHowTo()
-
         inputManager = getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
         inputManager.showSoftInput(binding.searchText, 0)
+
+        showHowTo()
 
         binding.searchBtn.setOnClickListener{
             searchAddress(binding.searchText.text.toString())
@@ -79,12 +81,6 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
             }
             handled
         }
-    }
-
-    private fun readyMap(savedInstanceState: Bundle?){
-        mapView = binding.mapView
-        mapView.onCreate(savedInstanceState)
-        mapView.getMapAsync(this)
     }
 //ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡMapㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ
     override fun onMapReady(map: NaverMap) {
@@ -104,7 +100,14 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
                     }
                     else{
                         val location = "${latLng.latitude},${latLng.longitude}"
-                        val id = insertToDB(name, range, volume, location)
+                        var query = "INSERT INTO lists('name', 'range', 'volume', 'location') values('${name}', '${range}', '${volume}', '${location}');"
+                        App.database.execSQL(query)
+
+                        query = "SELECT id FROM lists WHERE location = '${location}';"
+                        val cursor = App.database.rawQuery(query, null)
+                        cursor.moveToNext()
+
+                        val id = cursor.getString(cursor.getColumnIndex("id"))
 
                         val geofence = getGeofence(id, LatLng(latLng.latitude, latLng.longitude), range.toFloat())
                         geofenceList.add(geofence)
@@ -114,19 +117,6 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
                 }
             })
         }
-    }
-
-    private fun insertToDB(name: String, range: Int, volume: Int, location: String): String{
-        var query = "INSERT INTO lists('name', 'range', 'volume', 'location') values('${name}', '${range}', '${volume}', '${location}');"
-        App.database.execSQL(query)
-
-        query = "SELECT id FROM lists WHERE location = '${location}';"
-        val cursor = App.database.rawQuery(query, null)
-        cursor.moveToNext()
-
-        val id = cursor.getString(cursor.getColumnIndex("id"))
-
-        return id
     }
 
     private fun setInitLoc(){
@@ -287,8 +277,8 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
     }
 
     private fun addGeofences(){
-        if(ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION)
-            == PackageManager.PERMISSION_GRANTED){
+        if(ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
+        && ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_BACKGROUND_LOCATION) == PackageManager.PERMISSION_GRANTED){
             geofencingClient.addGeofences(getGeofencingRequest(geofenceList), geoPending).run{
                 addOnSuccessListener {
                     Log.e("addGeofence", "Success")
