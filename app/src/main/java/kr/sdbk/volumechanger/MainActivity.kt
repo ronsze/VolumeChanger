@@ -42,7 +42,9 @@ private fun VolumeChangerApp(
         modifier = modifier
     ) {
         composable(MainDirections.Splash.route) {
-            SplashView()
+            SplashView(
+                navigateToList = { navController.navigate(MainDirections.List.route) }
+            )
         }
 
         composable(MainDirections.List.route) {
