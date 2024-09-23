@@ -3,7 +3,6 @@ package kr.sdbk.volumechanger
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
@@ -13,6 +12,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import kotlinx.serialization.Serializable
 import kr.sdbk.volumechanger.feature.list.ListView
 import kr.sdbk.volumechanger.feature.map.MapView
 import kr.sdbk.volumechanger.feature.splash.SplashView
@@ -38,27 +38,30 @@ private fun VolumeChangerApp(
 ) {
     NavHost(
         navController = navController,
-        startDestination = MainDirections.Splash.route,
+        startDestination = Splash,
         modifier = modifier
     ) {
-        composable(MainDirections.Splash.route) {
+        composable<Splash> {
             SplashView(
-                navigateToList = { navController.navigate(MainDirections.List.route) }
+                navigateToList = { navController.navigate(List) }
             )
         }
 
-        composable(MainDirections.List.route) {
+        composable<List> {
             ListView()
         }
 
-        composable(MainDirections.Map.route) {
+        composable<Map> {
             MapView()
         }
     }
 }
 
-sealed class MainDirections(val route: String) {
-    data object Splash: MainDirections("splash")
-    data object List: MainDirections("list")
-    data object Map: MainDirections("map")
-}
+@Serializable
+data object Splash
+
+@Serializable
+data object List
+
+@Serializable
+data object Map
