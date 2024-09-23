@@ -3,8 +3,8 @@ plugins {
     alias(libs.plugins.jetbrains.kotlin.android)
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.hilt)
+    alias(libs.plugins.ksp)
     kotlin("kapt")
-
 }
 
 android {
@@ -82,5 +82,5 @@ dependencies {
     implementation(libs.room)
     implementation(libs.room.ktx)
     annotationProcessor(libs.room.compiler)
-    kapt(libs.room.compiler)
+    ksp(libs.room.compiler)
 }
