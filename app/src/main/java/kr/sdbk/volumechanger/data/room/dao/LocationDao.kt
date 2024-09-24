@@ -10,17 +10,17 @@ import kr.sdbk.volumechanger.data.room.entity.LocationEntity
 @Dao
 interface LocationDao {
     @Insert
-    fun insertLocation(location: LocationEntity)
+    suspend fun insertLocation(location: LocationEntity)
 
     @Insert
-    fun insertLocationList(locationList: List<LocationEntity>)
+    suspend fun insertLocationList(locationList: List<LocationEntity>)
 
     @Query("SELECT * from location")
-    fun getAllLocation(): LocationEntity
+    suspend fun getAllLocation(): List<LocationEntity>
 
     @Delete
-    fun deleteLocation(location: LocationEntity)
+    suspend fun deleteLocation(location: LocationEntity)
 
     @Update
-    fun updateLocation(location: LocationEntity)
+    suspend fun updateLocation(location: LocationEntity)
 }
