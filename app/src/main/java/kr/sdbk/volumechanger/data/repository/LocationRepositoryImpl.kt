@@ -2,8 +2,9 @@ package kr.sdbk.volumechanger.data.repository
 
 import kr.sdbk.volumechanger.data.room.dao.LocationDao
 import kr.sdbk.volumechanger.data.room.entity.LocationEntity
+import javax.inject.Inject
 
-class LocationRepositoryImpl(
+class LocationRepositoryImpl @Inject constructor(
     private val localDataSource: LocationDao
 ): LocationRepository {
     override suspend fun insertLocation(location: LocationEntity) = localDataSource.insertLocation(location)
