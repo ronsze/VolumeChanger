@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -19,6 +20,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import kr.sdbk.volumechanger.R
 import kr.sdbk.volumechanger.base.ErrorAlertState
 import kr.sdbk.volumechanger.ui.composable.ErrorAlert
@@ -26,7 +28,7 @@ import kr.sdbk.volumechanger.ui.composable.ErrorAlert
 @Composable
 fun SplashView(
     navigateToList: () -> Unit,
-    viewModel: SplashViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
+    viewModel: SplashViewModel = viewModel()
 ) {
     val lifecycleOwner = LocalLifecycleOwner.current
     DisposableEffect(key1 = lifecycleOwner) {
@@ -39,12 +41,12 @@ fun SplashView(
 
     val uiState = viewModel.uiState.collectAsStateWithLifecycle().value
     var errorAlertState by remember { mutableStateOf(ErrorAlertState()) }
-    when (uiState) {
-        SplashViewModel.SplashUiState.Loading -> Unit
-        SplashViewModel.SplashUiState.Loaded -> navigateToList()
-        is SplashViewModel.SplashUiState.Failed -> errorAlertState = ErrorAlertState(true, uiState.message)
+    if (uiState is SplashViewModel.SplashUiState.Failed) errorAlertState = ErrorAlertState(true, uiState.message)
+    
+    LaunchedEffect(key1 = uiState) {
+        if (uiState == SplashViewModel.SplashUiState.Loaded) navigateToList()
     }
-
+    
     Content()
 
     if (errorAlertState.isVisible) {

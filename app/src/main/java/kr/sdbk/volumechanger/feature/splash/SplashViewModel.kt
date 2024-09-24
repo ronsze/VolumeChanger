@@ -1,19 +1,26 @@
 package kr.sdbk.volumechanger.feature.splash
 
 import androidx.lifecycle.viewModelScope
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import kr.sdbk.volumechanger.base.BaseViewModel
+import javax.inject.Inject
 
-class SplashViewModel: BaseViewModel() {
+@HiltViewModel
+class SplashViewModel @Inject constructor(
+
+): BaseViewModel() {
     private val _uiState: MutableStateFlow<SplashUiState> = MutableStateFlow(SplashUiState.Loading)
     val uiState get() = _uiState.asStateFlow()
 
     fun loadData() {
         viewModelScope.launch {
-            delay(2000)
+            withContext(Dispatchers.Default) { delay(2000) }
             _uiState.set(SplashUiState.Loaded)
         }
     }

@@ -44,7 +44,7 @@ android {
         compose = true
     }
     composeOptions {
-        kotlinCompilerExtensionVersion = "1.5.1"
+        kotlinCompilerExtensionVersion = "1.5.10"
     }
     packaging {
         resources {
@@ -74,6 +74,8 @@ dependencies {
     debugImplementation(libs.androidx.ui.test.manifest)
 
     implementation(libs.compose.navigation)
+    implementation(libs.compose.navigation.hilt)
+    implementation(libs.compose.lifecycle)
     implementation(libs.kotlinx.serialization)
 
     implementation(libs.hilt)
@@ -83,4 +85,8 @@ dependencies {
     implementation(libs.room.ktx)
     annotationProcessor(libs.room.compiler)
     ksp(libs.room.compiler)
+}
+
+kapt {
+    correctErrorTypes = true
 }

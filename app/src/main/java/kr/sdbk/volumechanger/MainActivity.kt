@@ -12,12 +12,18 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.toRoute
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
+import kr.sdbk.volumechanger.data.room.entity.LocationEntity
 import kr.sdbk.volumechanger.feature.list.ListView
 import kr.sdbk.volumechanger.feature.map.MapView
 import kr.sdbk.volumechanger.feature.splash.SplashView
 import kr.sdbk.volumechanger.ui.theme.VolumeChangerTheme
 
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -43,25 +49,34 @@ private fun VolumeChangerApp(
     ) {
         composable<Splash> {
             SplashView(
-                navigateToList = { navController.navigate(List) }
+                navigateToList = {
+                    navController.navigate(List) {
+                        popUpTo(Splash) {
+                            inclusive = true
+                        }
+                    }
+                }
             )
         }
 
         composable<List> {
-            ListView()
+            ListView(
+                navigateToMap = { navController.navigate(Map(Json.encodeToString(it))) }
+            )
         }
 
-        composable<Map> {
-            MapView()
+        composable<Map> { backstackEntry ->
+            val location: LocationEntity? = Json.decodeFromString(backstackEntry.toRoute())
+            MapView(location)
         }
     }
 }
 
 @Serializable
-data object Splash
+object Splash
 
 @Serializable
-data object List
+object List
 
 @Serializable
-data object Map
+data class Map(val location: String?)

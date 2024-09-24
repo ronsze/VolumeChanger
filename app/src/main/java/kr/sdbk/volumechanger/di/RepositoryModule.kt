@@ -14,6 +14,6 @@ import javax.inject.Singleton
 class RepositoryModule {
     @Provides
     @Singleton
-    private fun providesLocationRepository(locationDao: LocationDao): LocationRepository =
+    fun providesLocationRepository(locationDao: LocationDao): LocationRepository =
         LocationRepositoryImpl(locationDao)
 }
