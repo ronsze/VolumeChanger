@@ -1,6 +1,6 @@
 package kr.sdbk.volumechanger.base
 
-data class ErrorAlertState(
+data class AlertState(
     val isVisible: Boolean = false,
     val message: String = ""
 )

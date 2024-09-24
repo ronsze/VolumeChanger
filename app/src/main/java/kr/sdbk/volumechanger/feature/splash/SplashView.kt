@@ -22,7 +22,7 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import kr.sdbk.volumechanger.R
-import kr.sdbk.volumechanger.base.ErrorAlertState
+import kr.sdbk.volumechanger.base.AlertState
 import kr.sdbk.volumechanger.ui.composable.ErrorAlert
 
 @Composable
@@ -40,8 +40,8 @@ fun SplashView(
     }
 
     val uiState = viewModel.uiState.collectAsStateWithLifecycle().value
-    var errorAlertState by remember { mutableStateOf(ErrorAlertState()) }
-    if (uiState is SplashViewModel.SplashUiState.Failed) errorAlertState = ErrorAlertState(true, uiState.message)
+    var errorAlertState by remember { mutableStateOf(AlertState()) }
+    if (uiState is SplashViewModel.SplashUiState.Failed) errorAlertState = AlertState(true, uiState.message)
     
     LaunchedEffect(key1 = uiState) {
         if (uiState == SplashViewModel.SplashUiState.Loaded) navigateToList()
@@ -52,7 +52,7 @@ fun SplashView(
     if (errorAlertState.isVisible) {
         ErrorAlert(
             message = errorAlertState.message,
-            onDismissRequest = { errorAlertState = ErrorAlertState() },
+            onDismissRequest = { errorAlertState = AlertState() },
             onRetry = viewModel::loadData
         )
     }

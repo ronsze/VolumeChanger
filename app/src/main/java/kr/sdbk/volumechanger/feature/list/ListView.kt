@@ -1,17 +1,22 @@
 package kr.sdbk.volumechanger.feature.list
 
-import android.util.Log
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Switch
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
@@ -75,7 +80,8 @@ private fun Content(
     navigateToMap: (LocationEntity?) -> Unit
 ) {
     LazyColumn(
-        modifier = Modifier.fillMaxSize()
+        modifier = Modifier
+            .fillMaxSize()
     ) {
         items(list) {
             LocationItem(
@@ -91,7 +97,29 @@ private fun LocationItem(
     item: LocationEntity,
     onClickItem: () -> Unit
 ) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier
+            .height(100.dp)
+            .border((1.5).dp, Color.LightGray, RoundedCornerShape(12.dp))
+            .padding(horizontal = 20.dp)
+            .clickable { onClickItem() }
+    ) {
+        BaseText(
+            text = item.name,
+            fontSize = 21.sp,
+            fontWeight = FontWeight.Medium,
+            modifier = Modifier
+                .weight(1f)
+        )
+        Spacer(modifier = Modifier.width(10.dp))
 
+        Switch(
+            checked = item.enabled,
+            onCheckedChange = { item.enabled = !item.enabled },
+            modifier = Modifier
+        )
+    }
 }
 
 @Composable
@@ -126,6 +154,24 @@ private fun ErrorView(
                     .clickable { onRetry() }
             )
         }
+    }
+}
+
+@Preview(widthDp = 300)
+@Composable
+private fun LocationItemPreview() {
+    LocationItem(
+        item = LocationEntity(
+            created = 0,
+            name = "회사",
+            location = Pair(35.2, 110.3),
+            500,
+            0,
+            0,
+            true
+        )
+    ) {
+
     }
 }
 

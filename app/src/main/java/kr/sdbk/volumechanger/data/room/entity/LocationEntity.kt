@@ -11,5 +11,6 @@ data class LocationEntity(
     val location: Pair<Double, Double>,
     val range: Int,
     @ColumnInfo("bell_volume") val bellVolume: Int,
-    @ColumnInfo("media_volume") val mediaVolume: Int
+    @ColumnInfo("media_volume") val mediaVolume: Int,
+    var enabled: Boolean = true
 )

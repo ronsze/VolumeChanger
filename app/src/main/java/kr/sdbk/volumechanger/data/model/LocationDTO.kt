@@ -12,5 +12,6 @@ data class LocationDTO(
     @SerialName("bell_volume")
     val bellVolume: Int,
     @SerialName("media_volume")
-    val mediaVolume: Int
+    val mediaVolume: Int,
+    val enabled: Boolean
 )
