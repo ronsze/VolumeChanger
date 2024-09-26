@@ -61,12 +61,15 @@ private fun VolumeChangerApp(
 
         composable<List> {
             ListView(
-                navigateToMap = { navController.navigate(Map(Json.encodeToString(it))) }
+                navigateToMap = {
+                    val data = it?.run { Json.encodeToString(this) }
+                    navController.navigate(Map(data))
+                }
             )
         }
 
         composable<Map> { backstackEntry ->
-            val location: LocationEntity? = Json.decodeFromString(backstackEntry.toRoute())
+            val location: LocationEntity? = backstackEntry.toRoute<String?>()?.run { Json.decodeFromString(this) }
             MapView(location)
         }
     }

@@ -1,7 +1,6 @@
 package kr.sdbk.volumechanger.data.mapper
 
 import androidx.room.TypeConverter
-import com.google.android.gms.maps.model.LatLng
 import kr.sdbk.volumechanger.data.mapper.LocationConverter.locationStringToPair
 import kr.sdbk.volumechanger.data.model.LocationDTO
 import kr.sdbk.volumechanger.data.room.entity.LocationEntity
@@ -26,8 +25,6 @@ object LocationMapper {
         mediaVolume = mediaVolume,
         enabled = enabled
     )
-
-    fun Pair<Double, Double>.toLatLng() = LatLng(first, second)
 }
 
 object LocationConverter {

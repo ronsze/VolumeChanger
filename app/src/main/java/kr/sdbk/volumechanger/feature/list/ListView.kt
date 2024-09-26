@@ -1,10 +1,13 @@
 package kr.sdbk.volumechanger.feature.list
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.border
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -16,6 +19,11 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardColors
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Switch
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -80,30 +88,62 @@ private fun Content(
     navigateToMap: (LocationEntity?) -> Unit
 ) {
     LazyColumn(
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+        contentPadding = PaddingValues(
+            top = 15.dp,
+            bottom = 20.dp
+        ),
         modifier = Modifier
             .fillMaxSize()
+            .padding(horizontal = 20.dp)
     ) {
         items(list) {
-            LocationItem(
-                item = it,
+            LocationItemContainer(
+                content = {
+                    LocationItem(item = it)
+                },
                 onClickItem = { navigateToMap(it) }
+            )
+        }
+
+        item {
+            LocationItemContainer(
+                content = {
+                    LocationBlankItem()
+                },
+                onClickItem = { navigateToMap(null) }
             )
         }
     }
 }
 
 @Composable
-private fun LocationItem(
-    item: LocationEntity,
+private fun LocationItemContainer(
+    content: @Composable () -> Unit,
     onClickItem: () -> Unit
+) {
+    Card(
+        border = BorderStroke((1.5).dp, Color.LightGray),
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.Transparent),
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(100.dp)
+            .clickable { onClickItem() }
+    ) {
+        content()
+    }
+}
+
+@Composable
+private fun LocationItem(
+    item: LocationEntity
 ) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
-            .height(100.dp)
-            .border((1.5).dp, Color.LightGray, RoundedCornerShape(12.dp))
+            .fillMaxSize()
             .padding(horizontal = 20.dp)
-            .clickable { onClickItem() }
     ) {
         BaseText(
             text = item.name,
@@ -118,6 +158,21 @@ private fun LocationItem(
             checked = item.enabled,
             onCheckedChange = { item.enabled = !item.enabled },
             modifier = Modifier
+        )
+    }
+}
+
+@Composable
+private fun LocationBlankItem() {
+    Box(
+        modifier = Modifier.fillMaxSize()
+    ) {
+        Image(
+            imageVector = Icons.Filled.Add,
+            contentDescription = "",
+            modifier = Modifier
+                .size(55.dp)
+                .align(Alignment.Center)
         )
     }
 }
@@ -160,19 +215,33 @@ private fun ErrorView(
 @Preview(widthDp = 300)
 @Composable
 private fun LocationItemPreview() {
-    LocationItem(
-        item = LocationEntity(
-            created = 0,
-            name = "회사",
-            location = Pair(35.2, 110.3),
-            500,
-            0,
-            0,
-            true
-        )
-    ) {
+    LocationItemContainer(
+        content = {
+            LocationItem(
+                item = LocationEntity(
+                    created = 0,
+                    name = "회사",
+                    location = Pair(35.2, 110.3),
+                    500,
+                    0,
+                    0,
+                    true
+                )
+            )
+        },
+        onClickItem = {}
+    )
+}
 
-    }
+@Preview(widthDp = 300)
+@Composable
+private fun LocationBlankItemPreview() {
+    LocationItemContainer(
+        content = {
+            LocationBlankItem()
+        },
+        onClickItem = {}
+    )
 }
 
 @Preview

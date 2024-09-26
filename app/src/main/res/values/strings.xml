@@ -3,4 +3,14 @@
 
     <string name="confirm">확인</string>
     <string name="retry">다시 시도</string>
+
+    <string name="name">이름</string>
+    <string name="address">주소</string>
+    <string name="range">범위</string>
+    <string name="bell_volume">벨소리</string>
+    <string name="media_volume">미디어 음량</string>
+    
+    <string name="mute">음소거</string>
+    <string name="vibration">진동</string>
+    <string name="max">최대</string>
 </resources>

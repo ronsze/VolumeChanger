@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.jetbrains.kotlin.android)
@@ -5,11 +7,16 @@ plugins {
     alias(libs.plugins.hilt)
     alias(libs.plugins.ksp)
     kotlin("kapt")
+    id("com.google.android.libraries.mapsplatform.secrets-gradle-plugin")
 }
 
 android {
     namespace = "kr.sdbk.volumechanger"
     compileSdk = 34
+
+    val secretProperties = Properties().apply {
+        load(rootProject.file("secrets.properties").inputStream())
+    }
 
     defaultConfig {
         applicationId = "kr.sdbk.volumechanger"
@@ -24,6 +31,15 @@ android {
         }
     }
 
+    signingConfigs {
+        create("release") {
+            keyAlias = secretProperties.getProperty("KEY_ALIAS")
+            keyPassword = secretProperties.getProperty("KEY_PASSWORD")
+            storeFile = file(secretProperties.getProperty("STORE_FILE"))
+            storePassword = secretProperties.getProperty("STORE_PASSWORD")
+        }
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = false
@@ -31,8 +47,15 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            signingConfig = signingConfigs.getByName("release")
+        }
+
+        debug {
+            isDebuggable = true
+            signingConfig = signingConfigs.getByName("release")
         }
     }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_1_8
         targetCompatibility = JavaVersion.VERSION_1_8

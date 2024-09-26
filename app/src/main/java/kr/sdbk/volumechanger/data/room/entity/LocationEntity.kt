@@ -3,8 +3,10 @@ package kr.sdbk.volumechanger.data.room.entity
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import kotlinx.serialization.Serializable
 
 @Entity("location")
+@Serializable
 data class LocationEntity(
     @PrimaryKey val created: Long,
     val name: String,

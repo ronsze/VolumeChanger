@@ -10,7 +10,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kr.sdbk.volumechanger.base.AlertState
 import kr.sdbk.volumechanger.base.BaseViewModel
-import kr.sdbk.volumechanger.data.mapper.LocationMapper.toLatLng
 import kr.sdbk.volumechanger.data.repository.LocationRepository
 import kr.sdbk.volumechanger.data.room.entity.LocationEntity
 import kr.sdbk.volumechanger.di.DefaultDispatcher
