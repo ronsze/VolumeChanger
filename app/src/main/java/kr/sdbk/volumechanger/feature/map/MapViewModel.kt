@@ -1,9 +1,11 @@
 package kr.sdbk.volumechanger.feature.map
 
 import android.location.Location
+import android.util.Log
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
@@ -39,7 +41,7 @@ class MapViewModel @Inject constructor(
                 _locationList.set(it)
             }
             res.onFailure {
-                alertState.set(AlertState(true, it.message ?: Constants.UNKNOWN_ERROR))
+                showAlert(it.message ?: Constants.UNKNOWN_ERROR)
             }
         }
     }
@@ -48,7 +50,7 @@ class MapViewModel @Inject constructor(
         viewModelScope.launch {
             val isOverlap = withContext(defaultDispatcher) { checkOverlap(location) }
             if (isOverlap) {
-                alertState.set(AlertState(true, "It overlaps"))
+                showAlert("It overlaps")
             } else {
                 val res = runCatching { withContext(ioDispatcher) { locationRepository.insertLocation(location) } }
                 basicProcessing("Inserted", res)
@@ -73,12 +75,12 @@ class MapViewModel @Inject constructor(
     private fun<R> basicProcessing(message: String, res: Result<R>) {
         res.onSuccess {
             if (message.isNotEmpty()) {
-                alertState.set(AlertState(true, message))
+                showAlert(message)
                 loadLocation()
             }
         }
         res.onFailure {
-            alertState.set(AlertState(true, it.message ?: Constants.UNKNOWN_ERROR))
+            showAlert(it.message ?: Constants.UNKNOWN_ERROR)
         }
     }
 
@@ -94,12 +96,16 @@ class MapViewModel @Inject constructor(
             }
             val distance = newLocation.distanceTo(oldLocation)
 
-            if (distance + DISTANCE_SPACE > input.range + old.range) return true
+            if (distance < input.range + old.range + DISTANCE_SPACE) return true
         }
         return false
     }
 
-    fun resetAlertState() {
-        alertState.set(AlertState())
+    private fun showAlert(message: String) {
+        viewModelScope.launch {
+            alertState.emit(AlertState(true, message))
+            delay(3000)
+            alertState.emit(AlertState())
+        }
     }
 }
