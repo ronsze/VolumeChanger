@@ -13,4 +13,6 @@
     <string name="mute">음소거</string>
     <string name="vibration">진동</string>
     <string name="max">최대</string>
+
+    <string name="please_grant_permissions">앱 사용을 위해 권한을 허용해주세요.</string>
 </resources>

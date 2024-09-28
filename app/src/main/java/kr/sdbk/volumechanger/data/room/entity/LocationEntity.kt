@@ -15,4 +15,4 @@ data class LocationEntity(
     @ColumnInfo("bell_volume") val bellVolume: Int,
     @ColumnInfo("media_volume") val mediaVolume: Int,
     var enabled: Boolean = true
-)
+): java.io.Serializable

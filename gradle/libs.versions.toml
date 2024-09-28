@@ -9,6 +9,7 @@ lifecycleRuntimeKtx = "2.8.5"
 activityCompose = "1.9.2"
 composeBom = "2024.04.01"
 hilt = "2.50"
+playServicesLocation = "21.3.0"
 room = "2.6.1"
 secretsGradlePlugin = "2.0.1"
 
@@ -42,6 +43,7 @@ room-ktx = { group = "androidx.room", name = "room-ktx", version.ref = "room" }
 room-compiler = { group = "androidx.room", name = "room-compiler", version.ref = "room" }
 
 google-map = { group = "com.google.maps.android", name = "maps-compose", version = "4.4.1" }
+play-services-location = { module = "com.google.android.gms:play-services-location", version.ref = "playServicesLocation" }
 secrets-gradle-plugin = { module = "com.google.android.libraries.mapsplatform.secrets-gradle-plugin:secrets-gradle-plugin", version.ref = "secretsGradlePlugin" }
 
 [plugins]

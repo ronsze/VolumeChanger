@@ -110,6 +110,7 @@ dependencies {
     ksp(libs.room.compiler)
 
     implementation(libs.google.map)
+    implementation(libs.play.services.location)
 }
 
 kapt {
