@@ -19,6 +19,7 @@ import kr.sdbk.volumechanger.data.room.entity.LocationEntity
 import kr.sdbk.volumechanger.util.Constants
 import kr.sdbk.volumechanger.util.toLatLng
 import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
 
 class GeofenceModule(
@@ -26,11 +27,9 @@ class GeofenceModule(
 ) {
     private val client = LocationServices.getGeofencingClient(context)
 
-    fun addGeofencing(
-        locationEntityList: List<LocationEntity>,
-        onSuccess: () -> Unit,
-        onFailure: () -> Unit
-    ) {
+    suspend fun addGeofencing(
+        locationEntityList: List<LocationEntity>
+    ) = suspendCoroutine { outer ->
         if (ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
             CoroutineScope(Dispatchers.IO).launch {
                 val taskList = locationEntityList.map { locationEntity ->
@@ -39,34 +38,31 @@ class GeofenceModule(
                     val request = getGeofencingRequest(geofence)
 
                     async {
-                        suspendCoroutine { continuation ->
+                        suspendCoroutine { inner ->
                             client.addGeofences(request, pendingIntent).run {
                                 addOnSuccessListener {
-                                    continuation.resume(true)
+                                    inner.resume(true)
                                 }
                                 addOnFailureListener {
-                                    continuation.resume(false)
+                                    outer.resumeWithException(Exception("Add geofence failed"))
                                 }
                             }
                         }
                     }
                 }
-                val res = taskList.awaitAll()
-                if (res.all { it }) onSuccess()
-                else onFailure()
+                taskList.awaitAll()
+                outer.resume(true)
             }
         }
     }
 
-    fun removeGeofencing(
-        locationEntityList: List<LocationEntity>,
-        onSuccess: () -> Unit,
-        onFailure: () -> Unit
-    ) {
+    suspend fun removeGeofencing(
+        locationEntityList: List<LocationEntity>
+    ) = suspendCoroutine { continuation ->
         if (ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
             client.removeGeofences(locationEntityList.map { it.created.toString() }).run {
-                addOnSuccessListener { onSuccess() }
-                addOnFailureListener { onFailure() }
+                addOnSuccessListener { continuation.resume(true) }
+                addOnFailureListener { continuation.resumeWithException(Exception("Remove geofence failed")) }
             }
         }
     }

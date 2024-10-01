@@ -17,6 +17,7 @@ import kr.sdbk.volumechanger.data.room.entity.LocationEntity
 import kr.sdbk.volumechanger.di.DefaultDispatcher
 import kr.sdbk.volumechanger.di.IODispatcher
 import kr.sdbk.volumechanger.util.Constants
+import kr.sdbk.volumechanger.util.modules.GeofenceModule
 import javax.inject.Inject
 
 @HiltViewModel
