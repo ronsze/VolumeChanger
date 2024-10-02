@@ -15,9 +15,9 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.launch
 import kr.sdbk.volumechanger.broadcast.GeoFencingBroadcastReceiver
-import kr.sdbk.volumechanger.data.room.entity.LocationEntity
+import kr.sdbk.volumechanger.data.mapper.LocationMapper.toEntity
+import kr.sdbk.volumechanger.data.model.Location
 import kr.sdbk.volumechanger.util.Constants
-import kr.sdbk.volumechanger.util.toLatLng
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
@@ -28,13 +28,13 @@ class GeofenceModule(
     private val client = LocationServices.getGeofencingClient(context)
 
     suspend fun addGeofencing(
-        locationEntityList: List<LocationEntity>
+        locationList: List<Location>
     ) = suspendCoroutine { outer ->
         if (ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
             CoroutineScope(Dispatchers.IO).launch {
-                val taskList = locationEntityList.map { locationEntity ->
-                    val pendingIntent = getGeofencePendingIntent(locationEntity)
-                    val geofence = getGeofence(locationEntity)
+                val taskList = locationList.map { location ->
+                    val pendingIntent = getGeofencePendingIntent(location)
+                    val geofence = getGeofence(location)
                     val request = getGeofencingRequest(geofence)
 
                     async {
@@ -57,24 +57,23 @@ class GeofenceModule(
     }
 
     suspend fun removeGeofencing(
-        locationEntityList: List<LocationEntity>
+        locationList: List<Location>
     ) = suspendCoroutine { continuation ->
         if (ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
-            client.removeGeofences(locationEntityList.map { it.created.toString() }).run {
+            client.removeGeofences(locationList.map { it.created.toString() }).run {
                 addOnSuccessListener { continuation.resume(true) }
                 addOnFailureListener { continuation.resumeWithException(Exception("Remove geofence failed")) }
             }
         }
     }
 
-    private fun getGeofence(locationEntity: LocationEntity): Geofence {
-        val location = locationEntity.location.toLatLng()
+    private fun getGeofence(location: Location): Geofence {
         return Geofence.Builder()
-            .setRequestId(locationEntity.created.toString())
+            .setRequestId(location.created.toString())
             .setCircularRegion(
-                location.latitude,
-                location.longitude,
-                locationEntity.range.toFloat()
+                location.location.latitude,
+                location.location.longitude,
+                location.range.toFloat()
             )
             .setNotificationResponsiveness(30000)
             .setLoiteringDelay(30000)
@@ -83,9 +82,9 @@ class GeofenceModule(
             .build()
     }
 
-    private fun getGeofencePendingIntent(data: LocationEntity): PendingIntent {
+    private fun getGeofencePendingIntent(data: Location): PendingIntent {
         val intent = Intent(context, GeoFencingBroadcastReceiver::class.java).apply {
-            putExtra(Constants.LOCATION_ENTITY, data)
+            putExtra(Constants.LOCATION_ENTITY, data.toEntity())
         }
         return PendingIntent.getBroadcast(context, data.created.toInt(), intent, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
     }

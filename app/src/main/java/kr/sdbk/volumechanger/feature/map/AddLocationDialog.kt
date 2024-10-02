@@ -48,21 +48,19 @@ import com.google.android.gms.maps.model.LatLng
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kr.sdbk.volumechanger.R
-import kr.sdbk.volumechanger.data.room.entity.LocationEntity
+import kr.sdbk.volumechanger.data.model.Location
 import kr.sdbk.volumechanger.ui.composable.BaseText
 import kr.sdbk.volumechanger.ui.theme.Purple80
 import kr.sdbk.volumechanger.util.Values
 import kr.sdbk.volumechanger.util.enums.BellVolume
 import kr.sdbk.volumechanger.util.enums.MediaVolume
 import kr.sdbk.volumechanger.util.locationToAddress
-import kr.sdbk.volumechanger.util.toLatLng
-import kr.sdbk.volumechanger.util.toPair
 
 @Composable
 fun AddLocationDialog(
-    locationEntity: LocationEntity?,
+    location: Location?,
     currentLocation: LatLng,
-    onClickConfirm: (LocationEntity) -> Unit,
+    onClickConfirm: (Location) -> Unit,
     onDismissRequest: () -> Unit
 ) {
     val context = LocalContext.current
@@ -81,17 +79,17 @@ fun AddLocationDialog(
                     .fillMaxWidth()
                     .padding(15.dp)
             ) {
-                var name by remember { mutableStateOf(locationEntity?.name ?: "") }
+                var name by remember { mutableStateOf(location?.name ?: "") }
                 var address by remember { mutableStateOf("-") }
-                var range by remember { mutableStateOf(locationEntity?.range ?: Values.RANGE_ARRAY.first()) }
-                var bellVolume by remember { mutableStateOf(locationEntity?.bellVolume ?: 0) }
-                var mediaVolume by remember { mutableStateOf(locationEntity?.mediaVolume ?: 0) }
+                var range by remember { mutableStateOf(location?.range ?: Values.RANGE_ARRAY.first()) }
+                var bellVolume by remember { mutableStateOf(location?.bellVolume ?: 0) }
+                var mediaVolume by remember { mutableStateOf(location?.mediaVolume ?: 0) }
 
                 LaunchedEffect(Unit) {
                     scope.launch(Dispatchers.IO) {
                         address = locationToAddress(
                             context = context,
-                            location = locationEntity?.location?.toLatLng() ?: currentLocation
+                            location = location?.location ?: currentLocation
                         )
                     }
                 }
@@ -142,10 +140,10 @@ fun AddLocationDialog(
                     enabled = name.isNotEmpty(),
                     shape = RoundedCornerShape(35.dp),
                     onClick = {
-                        val entity = LocationEntity(
-                            created = locationEntity?.created ?: System.currentTimeMillis(),
+                        val entity = Location(
+                            created = location?.created ?: System.currentTimeMillis(),
                             name = name,
-                            location = currentLocation.toPair(),
+                            location = currentLocation,
                             range = range,
                             bellVolume = bellVolume,
                             mediaVolume = mediaVolume

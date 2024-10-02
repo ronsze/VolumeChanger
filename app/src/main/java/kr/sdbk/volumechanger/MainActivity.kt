@@ -17,6 +17,8 @@ import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import kr.sdbk.volumechanger.data.mapper.LocationMapper.toData
+import kr.sdbk.volumechanger.data.mapper.LocationMapper.toEntity
 import kr.sdbk.volumechanger.data.room.entity.LocationEntity
 import kr.sdbk.volumechanger.feature.list.ListView
 import kr.sdbk.volumechanger.feature.map.MapView
@@ -62,15 +64,16 @@ private fun VolumeChangerApp(
         composable<List> {
             ListView(
                 navigateToMap = {
-                    val data = it?.run { Json.encodeToString(this) }
+                    val data = it?.run { Json.encodeToString(toEntity()) }
                     navController.navigate(Map(data))
                 }
             )
         }
 
         composable<Map> { backstackEntry ->
-            val location: LocationEntity? = backstackEntry.toRoute<String?>()?.run { Json.decodeFromString(this) }
-            MapView(location)
+            val route: Map = backstackEntry.toRoute()
+            val data: LocationEntity? = route.location?.run { Json.decodeFromString(this) }
+            MapView(data?.toData())
         }
     }
 }

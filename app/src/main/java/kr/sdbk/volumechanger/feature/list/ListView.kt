@@ -2,7 +2,6 @@ package kr.sdbk.volumechanger.feature.list
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -22,7 +21,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.Card
-import androidx.compose.material3.CardColors
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Switch
 import androidx.compose.runtime.Composable
@@ -42,15 +40,16 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.google.android.gms.maps.model.LatLng
 import kr.sdbk.volumechanger.R
-import kr.sdbk.volumechanger.data.room.entity.LocationEntity
+import kr.sdbk.volumechanger.data.model.Location
 import kr.sdbk.volumechanger.ui.composable.BaseText
 import kr.sdbk.volumechanger.ui.composable.LoadingView
 import kr.sdbk.volumechanger.util.Constants
 
 @Composable
 fun ListView(
-    navigateToMap: (LocationEntity?) -> Unit,
+    navigateToMap: (Location?) -> Unit,
     viewModel: ListViewModel = hiltViewModel()
 ) {
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -84,8 +83,8 @@ fun ListView(
 
 @Composable
 private fun Content(
-    list: List<LocationEntity>,
-    navigateToMap: (LocationEntity?) -> Unit
+    list: List<Location>,
+    navigateToMap: (Location?) -> Unit
 ) {
     LazyColumn(
         verticalArrangement = Arrangement.spacedBy(12.dp),
@@ -137,7 +136,7 @@ private fun LocationItemContainer(
 
 @Composable
 private fun LocationItem(
-    item: LocationEntity
+    item: Location
 ) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
@@ -218,10 +217,10 @@ private fun LocationItemPreview() {
     LocationItemContainer(
         content = {
             LocationItem(
-                item = LocationEntity(
+                item = Location(
                     created = 0,
                     name = "회사",
-                    location = Pair(35.2, 110.3),
+                    location = LatLng(35.2, 110.3),
                     500,
                     0,
                     0,

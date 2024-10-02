@@ -10,8 +10,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kr.sdbk.volumechanger.base.BaseViewModel
+import kr.sdbk.volumechanger.data.model.Location
 import kr.sdbk.volumechanger.data.repository.LocationRepository
-import kr.sdbk.volumechanger.data.room.entity.LocationEntity
 import kr.sdbk.volumechanger.di.IODispatcher
 import kr.sdbk.volumechanger.util.modules.GeofenceModule
 import javax.inject.Inject
@@ -40,7 +40,7 @@ class SplashViewModel @Inject constructor(
     }
 
     private fun refreshGeofencing(
-        locationList: List<LocationEntity>
+        locationList: List<Location>
     ) {
         viewModelScope.launch {
             val res = withContext(ioDispatcher) { runCatching { geofenceModule.addGeofencing(locationList) } }

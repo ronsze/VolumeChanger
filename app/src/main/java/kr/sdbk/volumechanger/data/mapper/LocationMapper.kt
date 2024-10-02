@@ -1,39 +1,34 @@
 package kr.sdbk.volumechanger.data.mapper
 
-import androidx.room.TypeConverter
-import kr.sdbk.volumechanger.data.mapper.LocationConverter.locationStringToPair
-import kr.sdbk.volumechanger.data.model.LocationDTO
+import com.google.android.gms.maps.model.LatLng
+import kr.sdbk.volumechanger.data.model.Location
 import kr.sdbk.volumechanger.data.room.entity.LocationEntity
 
 object LocationMapper {
-    fun LocationDTO.toEntity() = LocationEntity(
+    fun LocationEntity.toData() = Location(
         created = created,
         name = name,
-        location = locationStringToPair(location),
+        location = location.convertLatLng(),
         range = range,
         bellVolume = bellVolume,
         mediaVolume = mediaVolume,
         enabled = enabled
     )
 
-    fun LocationEntity.toDTO() = LocationDTO(
+    fun Location.toEntity() = LocationEntity(
         created = created,
         name = name,
-        location = "${location.first}/${location.second}",
+        location = location.convertString(),
         range = range,
         bellVolume = bellVolume,
         mediaVolume = mediaVolume,
         enabled = enabled
     )
-}
 
-object LocationConverter {
-    @TypeConverter
-    fun locationPairToString(value: Pair<Double, Double>): String = "${value.first}/${value.second}"
+    fun LatLng.convertString() = "${latitude}/${longitude}"
 
-    @TypeConverter
-    fun locationStringToPair(value: String): Pair<Double, Double> {
-        val split = value.split("/")
-        return Pair(split[0].toDouble(), split[1].toDouble())
+    fun String.convertLatLng(): LatLng {
+        val split = split("/")
+        return LatLng(split[0].toDouble(), split[1].toDouble())
     }
 }

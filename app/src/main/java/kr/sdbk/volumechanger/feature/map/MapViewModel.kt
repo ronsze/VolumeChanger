@@ -1,7 +1,5 @@
 package kr.sdbk.volumechanger.feature.map
 
-import android.location.Location
-import android.util.Log
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineDispatcher
@@ -12,12 +10,11 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kr.sdbk.volumechanger.base.AlertState
 import kr.sdbk.volumechanger.base.BaseViewModel
+import kr.sdbk.volumechanger.data.model.Location
 import kr.sdbk.volumechanger.data.repository.LocationRepository
-import kr.sdbk.volumechanger.data.room.entity.LocationEntity
 import kr.sdbk.volumechanger.di.DefaultDispatcher
 import kr.sdbk.volumechanger.di.IODispatcher
 import kr.sdbk.volumechanger.util.Constants
-import kr.sdbk.volumechanger.util.modules.GeofenceModule
 import javax.inject.Inject
 
 @HiltViewModel
@@ -30,7 +27,7 @@ class MapViewModel @Inject constructor(
         private const val DISTANCE_SPACE = 25f      // meter
     }
 
-    private val _locationList: MutableStateFlow<List<LocationEntity>> = MutableStateFlow(listOf())
+    private val _locationList: MutableStateFlow<List<Location>> = MutableStateFlow(listOf())
     val locationList get() = _locationList.asStateFlow()
 
     val alertState: MutableStateFlow<AlertState> = MutableStateFlow(AlertState())
@@ -47,7 +44,7 @@ class MapViewModel @Inject constructor(
         }
     }
 
-    fun insertLocation(location: LocationEntity) {
+    fun insertLocation(location: Location) {
         viewModelScope.launch {
             val isOverlap = withContext(defaultDispatcher) { checkOverlap(location) }
             if (isOverlap) {
@@ -59,14 +56,14 @@ class MapViewModel @Inject constructor(
         }
     }
 
-    fun updateLocation(location: LocationEntity) {
+    fun updateLocation(location: Location) {
         viewModelScope.launch {
             val res = runCatching { withContext(ioDispatcher) { locationRepository.updateLocation(location) } }
             basicProcessing("Updated", res)
         }
     }
 
-    fun deleteLocation(location: LocationEntity) {
+    fun deleteLocation(location: Location) {
         viewModelScope.launch {
             val res = runCatching { withContext(ioDispatcher) { locationRepository.deleteLocation(location) } }
             basicProcessing("Deleted", res)
@@ -85,15 +82,15 @@ class MapViewModel @Inject constructor(
         }
     }
 
-    private fun checkOverlap(input: LocationEntity): Boolean {
-        val newLocation = Location("new").apply {
-            latitude = input.location.first
-            longitude = input.location.second
+    private fun checkOverlap(input: Location): Boolean {
+        val newLocation = android.location.Location("new").apply {
+            latitude = input.location.latitude
+            longitude = input.location.longitude
         }
         locationList.value.forEach { old ->
-            val oldLocation = Location("new").apply {
-                latitude = old.location.first
-                longitude = old.location.second
+            val oldLocation = android.location.Location("new").apply {
+                latitude = old.location.latitude
+                longitude = old.location.longitude
             }
             val distance = newLocation.distanceTo(oldLocation)
 

@@ -1,7 +1,5 @@
 package kr.sdbk.volumechanger.feature.map
 
-import android.graphics.Paint.Align
-import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -12,7 +10,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -20,7 +17,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
@@ -37,15 +33,13 @@ import com.google.maps.android.compose.MapType
 import com.google.maps.android.compose.Marker
 import com.google.maps.android.compose.MarkerState
 import com.google.maps.android.compose.rememberCameraPositionState
-import kr.sdbk.volumechanger.data.mapper.LocationConverter
-import kr.sdbk.volumechanger.util.toLatLng
-import kr.sdbk.volumechanger.data.room.entity.LocationEntity
+import kr.sdbk.volumechanger.data.mapper.LocationMapper.convertLatLng
+import kr.sdbk.volumechanger.data.model.Location
 import kr.sdbk.volumechanger.util.Values
-import kotlin.random.Random
 
 @Composable
 fun MapView(
-    selectedLocation: LocationEntity?,
+    selectedLocation: Location?,
     viewModel: MapViewModel = hiltViewModel()
 ) {
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -62,7 +56,7 @@ fun MapView(
     var addLocationDialogState: AddLocationDialogState by remember { mutableStateOf(defaultAddLocationDialogState) }
     Box {
         val cameraPositionState = rememberCameraPositionState {
-            val initialLocation: LatLng = selectedLocation?.location?.toLatLng() ?: LocationConverter.locationStringToPair(Values.DEFAULT_LOCATION).toLatLng()
+            val initialLocation: LatLng = selectedLocation?.location ?: Values.DEFAULT_LOCATION.convertLatLng()
             position = CameraPosition.fromLatLngZoom(initialLocation, Values.DEFAULT_ZOOM)
         }
 
@@ -105,7 +99,7 @@ fun MapView(
 
     if (addLocationDialogState.isVisible) {
         AddLocationDialog(
-            locationEntity = addLocationDialogState.locationEntity,
+            location = addLocationDialogState.location,
             currentLocation = addLocationDialogState.currentLocation,
             onClickConfirm = { viewModel.insertLocation(it) },
             onDismissRequest = { addLocationDialogState = defaultAddLocationDialogState }
@@ -116,7 +110,7 @@ fun MapView(
 @Composable
 private fun Map(
     cameraPositionState: CameraPositionState,
-    locationList: List<LocationEntity>,
+    locationList: List<Location>,
     showAddLocationDialog: (LatLng) -> Unit
 ) {
     val properties = MapProperties(
@@ -132,7 +126,7 @@ private fun Map(
         locationList.forEachIndexed { i, v ->
             LocationMarker(
                 index = i,
-                locationEntity = v
+                location = v
             )
         }
     }
@@ -141,13 +135,13 @@ private fun Map(
 @Composable
 private fun LocationMarker(
     index: Int,
-    locationEntity: LocationEntity
+    location: Location
 ) {
-    val markerState = MarkerState(position = locationEntity.location.toLatLng())
+    val markerState = MarkerState(position = location.location)
     Marker(
         state = markerState,
-        title = locationEntity.name,
-        snippet = "${locationEntity.range}M",
+        title = location.name,
+        snippet = "${location.range}M",
         icon = BitmapDescriptorFactory.defaultMarker(getRandomMarkerColor(index))
     )
 }
@@ -161,6 +155,6 @@ private fun Tools() {
 
 data class AddLocationDialogState(
     val isVisible: Boolean = false,
-    val locationEntity: LocationEntity? = null,
+    val location: Location? = null,
     val currentLocation: LatLng
 )

@@ -8,6 +8,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kr.sdbk.volumechanger.base.BaseViewModel
+import kr.sdbk.volumechanger.data.model.Location
 import kr.sdbk.volumechanger.data.repository.LocationRepository
 import kr.sdbk.volumechanger.data.room.entity.LocationEntity
 import kr.sdbk.volumechanger.di.IODispatcher
@@ -41,7 +42,7 @@ class ListViewModel @Inject constructor(
 
     sealed interface ListUiState {
         data object Loading: ListUiState
-        data class Loaded(val list: List<LocationEntity>): ListUiState
+        data class Loaded(val list: List<Location>): ListUiState
         data class Failed(val message: String): ListUiState
     }
 }
