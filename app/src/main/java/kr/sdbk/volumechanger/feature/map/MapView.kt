@@ -41,6 +41,7 @@ import kr.sdbk.volumechanger.data.mapper.LocationConverter
 import kr.sdbk.volumechanger.util.toLatLng
 import kr.sdbk.volumechanger.data.room.entity.LocationEntity
 import kr.sdbk.volumechanger.util.Values
+import kotlin.random.Random
 
 @Composable
 fun MapView(
@@ -143,9 +144,11 @@ private fun LocationMarker(
         state = markerState,
         title = locationEntity.name,
         snippet = "${locationEntity.range}M",
-        icon = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_CYAN)
+        icon = BitmapDescriptorFactory.defaultMarker(getRandomMarkerColor())
     )
 }
+
+private fun getRandomMarkerColor() = Random.nextInt(0, 12) * 30f
 
 @Composable
 private fun Tools() {

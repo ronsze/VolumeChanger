@@ -14,5 +14,5 @@ import javax.inject.Singleton
 class UtilityModule {
     @Provides
     @Singleton
-    fun providesGeofenceModule(@ApplicationContext context: Context) = GeofenceModule(context)
+    fun providesGeofenceModule(@ApplicationContext context: Context): GeofenceModule = GeofenceModule(context)
 }

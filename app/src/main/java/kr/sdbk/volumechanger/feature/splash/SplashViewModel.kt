@@ -12,6 +12,7 @@ import kotlinx.coroutines.withContext
 import kr.sdbk.volumechanger.base.BaseViewModel
 import kr.sdbk.volumechanger.data.repository.LocationRepository
 import kr.sdbk.volumechanger.data.room.entity.LocationEntity
+import kr.sdbk.volumechanger.di.IODispatcher
 import kr.sdbk.volumechanger.util.modules.GeofenceModule
 import javax.inject.Inject
 
@@ -19,7 +20,7 @@ import javax.inject.Inject
 class SplashViewModel @Inject constructor(
     private val locationRepository: LocationRepository,
     private val geofenceModule: GeofenceModule,
-    private val ioDispatcher: CoroutineDispatcher
+    @IODispatcher private val ioDispatcher: CoroutineDispatcher
 ): BaseViewModel() {
     private val _uiState: MutableStateFlow<SplashUiState> = MutableStateFlow(SplashUiState.Loading)
     val uiState get() = _uiState.asStateFlow()
@@ -41,15 +42,11 @@ class SplashViewModel @Inject constructor(
     private fun refreshGeofencing(
         locationList: List<LocationEntity>
     ) {
-        geofenceModule.addGeofencing(
-            locationEntityList = locationList,
-            onSuccess = {
-                _uiState.set(SplashUiState.Loaded)
-            },
-            onFailure = {
-                _uiState.set(SplashUiState.Failed("Register geofencing failed"))
-            }
-        )
+        viewModelScope.launch {
+            val res = withContext(ioDispatcher) { runCatching { geofenceModule.addGeofencing(locationList) } }
+            res.onSuccess { _uiState.set(SplashUiState.Loaded) }
+            res.onFailure { _uiState.set(SplashUiState.Failed("Register geofencing failed")) }
+        }
     }
 
     sealed interface SplashUiState {

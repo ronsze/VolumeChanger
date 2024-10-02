@@ -7,6 +7,7 @@ import dagger.hilt.components.SingletonComponent
 import kr.sdbk.volumechanger.data.repository.LocationRepository
 import kr.sdbk.volumechanger.data.repository.LocationRepositoryImpl
 import kr.sdbk.volumechanger.data.room.dao.LocationDao
+import kr.sdbk.volumechanger.util.modules.GeofenceModule
 import javax.inject.Singleton
 
 @Module
@@ -14,6 +15,8 @@ import javax.inject.Singleton
 class RepositoryModule {
     @Provides
     @Singleton
-    fun providesLocationRepository(locationDao: LocationDao): LocationRepository =
-        LocationRepositoryImpl(locationDao)
+    fun providesLocationRepository(
+        locationDao: LocationDao,
+        geofenceModule: GeofenceModule
+    ): LocationRepository = LocationRepositoryImpl(locationDao, geofenceModule)
 }

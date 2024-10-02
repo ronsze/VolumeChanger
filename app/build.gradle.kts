@@ -99,6 +99,7 @@ dependencies {
     implementation(libs.compose.navigation)
     implementation(libs.compose.navigation.hilt)
     implementation(libs.compose.lifecycle)
+    implementation(libs.compose.accompanist.permissions)
     implementation(libs.kotlinx.serialization)
 
     implementation(libs.hilt)
