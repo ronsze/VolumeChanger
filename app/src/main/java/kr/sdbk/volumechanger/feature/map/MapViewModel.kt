@@ -51,7 +51,7 @@ class MapViewModel @Inject constructor(
         viewModelScope.launch {
             val isOverlap = withContext(defaultDispatcher) { checkOverlap(location) }
             if (isOverlap) {
-                showAlert("It overlaps")
+                showAlert("It overlaps with other places")
             } else {
                 val res = runCatching { withContext(ioDispatcher) { locationRepository.insertLocation(location) } }
                 basicProcessing("Inserted", res)

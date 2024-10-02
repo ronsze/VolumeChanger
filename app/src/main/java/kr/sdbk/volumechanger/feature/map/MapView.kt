@@ -129,14 +129,18 @@ private fun Map(
         modifier = Modifier
             .fillMaxSize()
     ) {
-        locationList.forEach {
-            LocationMarker(locationEntity = it)
+        locationList.forEachIndexed { i, v ->
+            LocationMarker(
+                index = i,
+                locationEntity = v
+            )
         }
     }
 }
 
 @Composable
 private fun LocationMarker(
+    index: Int,
     locationEntity: LocationEntity
 ) {
     val markerState = MarkerState(position = locationEntity.location.toLatLng())
@@ -144,11 +148,11 @@ private fun LocationMarker(
         state = markerState,
         title = locationEntity.name,
         snippet = "${locationEntity.range}M",
-        icon = BitmapDescriptorFactory.defaultMarker(getRandomMarkerColor())
+        icon = BitmapDescriptorFactory.defaultMarker(getRandomMarkerColor(index))
     )
 }
 
-private fun getRandomMarkerColor() = Random.nextInt(0, 12) * 30f
+private fun getRandomMarkerColor(index: Int) = (index % 12) * 30f
 
 @Composable
 private fun Tools() {

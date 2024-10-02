@@ -139,6 +139,7 @@ fun AddLocationDialog(
                     colors = ButtonDefaults.buttonColors(
                         containerColor = Color.Cyan
                     ),
+                    enabled = name.isNotEmpty(),
                     shape = RoundedCornerShape(35.dp),
                     onClick = {
                         val entity = LocationEntity(
