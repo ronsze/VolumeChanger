@@ -87,7 +87,7 @@ class GeofenceModule(
         val intent = Intent(context, GeoFencingBroadcastReceiver::class.java).apply {
             putExtra(Constants.LOCATION_ENTITY, data)
         }
-        return PendingIntent.getBroadcast(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT)
+        return PendingIntent.getBroadcast(context, data.created.toInt(), intent, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
     }
 
     private fun getGeofencingRequest(geofence: Geofence): GeofencingRequest = GeofencingRequest.Builder().apply {
