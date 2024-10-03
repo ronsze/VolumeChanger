@@ -34,8 +34,6 @@ class SplashViewModel @Inject constructor(
             res.onFailure {
                 _uiState.set(SplashUiState.Failed(it.message.toString()))
             }
-            withContext(Dispatchers.Default) { delay(2000) }
-            _uiState.set(SplashUiState.Loaded)
         }
     }
 

@@ -5,6 +5,7 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.util.Log
 import androidx.core.app.ActivityCompat
 import com.google.android.gms.location.Geofence
 import com.google.android.gms.location.GeofencingRequest
@@ -44,14 +45,19 @@ class GeofenceModule(
                                     inner.resume(true)
                                 }
                                 addOnFailureListener {
-                                    outer.resumeWithException(Exception("Add geofence failed"))
+                                    Log.e("qweqwe", "${it}")
+                                    inner.resume(false)
                                 }
                             }
                         }
                     }
                 }
-                taskList.awaitAll()
-                outer.resume(true)
+                val res = taskList.awaitAll()
+                if (res.all { it }) {
+                    outer.resume(true)
+                } else {
+                    outer.resumeWithException(Exception("Add geofence failed"))
+                }
             }
         }
     }
@@ -86,7 +92,7 @@ class GeofenceModule(
         val intent = Intent(context, GeoFencingBroadcastReceiver::class.java).apply {
             putExtra(Constants.LOCATION_ENTITY, data.toEntity())
         }
-        return PendingIntent.getBroadcast(context, data.created.toInt(), intent, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
+        return PendingIntent.getBroadcast(context, 0, intent, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
     }
 
     private fun getGeofencingRequest(geofence: Geofence): GeofencingRequest = GeofencingRequest.Builder().apply {

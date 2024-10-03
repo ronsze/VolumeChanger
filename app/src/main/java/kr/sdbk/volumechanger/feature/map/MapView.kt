@@ -36,6 +36,7 @@ import com.google.maps.android.compose.MarkerState
 import com.google.maps.android.compose.rememberCameraPositionState
 import kr.sdbk.volumechanger.data.mapper.LocationMapper.convertLatLng
 import kr.sdbk.volumechanger.data.model.Location
+import kr.sdbk.volumechanger.ui.composable.BasicAlert
 import kr.sdbk.volumechanger.util.Values
 
 @Composable
@@ -78,23 +79,10 @@ fun MapView(
         )
 
         if (alertState.isVisible) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(55.dp)
-                    .padding(horizontal = 20.dp)
-                    .padding(bottom = 15.dp)
-                    .background(Color.Black.copy(alpha = 0.8f), RoundedCornerShape(8.dp))
-                    .align(Alignment.BottomCenter)
-            ) {
-                Text(
-                    text = alertState.message,
-                    color = Color.White,
-                    modifier = Modifier
-                        .align(Alignment.Center)
-                )
-            }
-
+            BasicAlert(
+                message = alertState.message,
+                modifier = Modifier.align(Alignment.BottomCenter)
+            )
         }
     }
 
@@ -149,9 +137,11 @@ private fun LocationMarker(
     Circle(
         center = location.location,
         radius = location.range / 2.0,
+        clickable = true,
         strokeWidth = 5f,
         strokeColor = Color.Black,
-        fillColor = Color.LightGray.copy(0.4f)
+        fillColor = Color.LightGray.copy(0.4f),
+        onClick = { markerState.showInfoWindow() }
     )
 }
 

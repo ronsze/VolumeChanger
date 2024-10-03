@@ -3,14 +3,17 @@ package kr.sdbk.volumechanger.feature.list
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kr.sdbk.volumechanger.base.AlertState
 import kr.sdbk.volumechanger.base.BaseViewModel
 import kr.sdbk.volumechanger.data.model.Location
 import kr.sdbk.volumechanger.data.repository.LocationRepository
 import kr.sdbk.volumechanger.data.room.entity.LocationEntity
+import kr.sdbk.volumechanger.di.DefaultDispatcher
 import kr.sdbk.volumechanger.di.IODispatcher
 import kr.sdbk.volumechanger.util.Constants
 import javax.inject.Inject
@@ -18,25 +21,58 @@ import javax.inject.Inject
 @HiltViewModel
 class ListViewModel @Inject constructor(
     @IODispatcher private val ioDispatcher: CoroutineDispatcher,
+    @DefaultDispatcher private val defaultDispatcher: CoroutineDispatcher,
     private val locationRepository: LocationRepository
 ): BaseViewModel() {
     private val _uiState: MutableStateFlow<ListUiState> = MutableStateFlow(ListUiState.Loading)
     val uiState get() = _uiState.asStateFlow()
 
-    fun loadData() {
+    val alertState: MutableStateFlow<AlertState> = MutableStateFlow(AlertState())
+
+    fun loadLocation() {
         _uiState.set(ListUiState.Loading)
         viewModelScope.launch {
-            val res = withContext(ioDispatcher) {
-                runCatching {
-                    locationRepository.getAllLocation()
-                }
-            }
+            val res = withContext(ioDispatcher) { runCatching { locationRepository.getAllLocation() } }
             res.onSuccess {
                 _uiState.set(ListUiState.Loaded(it))
             }
             res.onFailure {
                 _uiState.set(ListUiState.Failed(it.message ?: Constants.UNKNOWN_ERROR))
             }
+        }
+    }
+
+    fun updateLocation(location: Location) {
+        viewModelScope.launch {
+            val res = runCatching { withContext(ioDispatcher) { locationRepository.updateLocation(location) } }
+            basicProcessing("Updated", res)
+        }
+    }
+
+    fun deleteLocation(location: Location) {
+        viewModelScope.launch {
+            val res = runCatching { withContext(ioDispatcher) { locationRepository.deleteLocation(location) } }
+            basicProcessing("Deleted", res)
+        }
+    }
+
+    private fun<R> basicProcessing(message: String, res: Result<R>) {
+        res.onSuccess {
+            if (message.isNotEmpty()) {
+                showAlert(message)
+                loadLocation()
+            }
+        }
+        res.onFailure {
+            showAlert(it.message ?: Constants.UNKNOWN_ERROR)
+        }
+    }
+
+    private fun showAlert(message: String) {
+        viewModelScope.launch {
+            alertState.emit(AlertState(true, message))
+            delay(3000)
+            alertState.emit(AlertState())
         }
     }
 

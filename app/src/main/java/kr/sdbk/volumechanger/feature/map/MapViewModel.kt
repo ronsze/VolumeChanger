@@ -51,34 +51,9 @@ class MapViewModel @Inject constructor(
                 showAlert("It overlaps with other places")
             } else {
                 val res = runCatching { withContext(ioDispatcher) { locationRepository.insertLocation(location) } }
-                basicProcessing("Inserted", res)
+                res.onSuccess { loadLocation() }
+                res.onFailure { showAlert(it.message ?: Constants.UNKNOWN_ERROR) }
             }
-        }
-    }
-
-    fun updateLocation(location: Location) {
-        viewModelScope.launch {
-            val res = runCatching { withContext(ioDispatcher) { locationRepository.updateLocation(location) } }
-            basicProcessing("Updated", res)
-        }
-    }
-
-    fun deleteLocation(location: Location) {
-        viewModelScope.launch {
-            val res = runCatching { withContext(ioDispatcher) { locationRepository.deleteLocation(location) } }
-            basicProcessing("Deleted", res)
-        }
-    }
-
-    private fun<R> basicProcessing(message: String, res: Result<R>) {
-        res.onSuccess {
-            if (message.isNotEmpty()) {
-                showAlert(message)
-                loadLocation()
-            }
-        }
-        res.onFailure {
-            showAlert(it.message ?: Constants.UNKNOWN_ERROR)
         }
     }
 
