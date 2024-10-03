@@ -18,6 +18,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material3.Button
@@ -39,6 +41,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -94,10 +97,25 @@ fun AddLocationDialog(
                     }
                 }
 
+                val confirm: () -> Unit = {
+                    val entity = Location(
+                        created = location?.created ?: System.currentTimeMillis(),
+                        name = name,
+                        location = currentLocation,
+                        range = range,
+                        bellVolume = bellVolume,
+                        mediaVolume = mediaVolume
+                    )
+                    onClickConfirm(entity)
+                    onDismissRequest()
+                }
+
                 OutlinedTextField(
                     value = name,
                     onValueChange = { name = it },
                     label = { BaseText(text = stringResource(id = R.string.name)) },
+                    keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Done),
+                    keyboardActions = KeyboardActions { confirm() },
                     modifier = Modifier
                         .fillMaxWidth()
                 )
@@ -139,18 +157,7 @@ fun AddLocationDialog(
                     ),
                     enabled = name.isNotEmpty(),
                     shape = RoundedCornerShape(35.dp),
-                    onClick = {
-                        val entity = Location(
-                            created = location?.created ?: System.currentTimeMillis(),
-                            name = name,
-                            location = currentLocation,
-                            range = range,
-                            bellVolume = bellVolume,
-                            mediaVolume = mediaVolume
-                        )
-                        onClickConfirm(entity)
-                        onDismissRequest()
-                    },
+                    onClick = confirm,
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(45.dp)
