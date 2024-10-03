@@ -41,7 +41,7 @@ class SplashViewModel @Inject constructor(
         locationList: List<Location>
     ) {
         viewModelScope.launch {
-            val res = withContext(ioDispatcher) { runCatching { geofenceModule.addGeofencing(locationList) } }
+            val res = withContext(ioDispatcher) { runCatching { geofenceModule.addGeofencing(locationList.filter { it.enabled }) } }
             res.onSuccess { _uiState.set(SplashUiState.Loaded) }
             res.onFailure { _uiState.set(SplashUiState.Failed("Register geofencing failed")) }
         }
