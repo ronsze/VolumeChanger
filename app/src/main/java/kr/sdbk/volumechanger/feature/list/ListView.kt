@@ -82,6 +82,7 @@ fun ListView(
                 Content(
                     list = (uiState as ListViewModel.ListUiState.Loaded).list,
                     navigateToMap = navigateToMap,
+                    onItemUpdated = viewModel::updateLocation,
                     deleteLocation = viewModel::deleteLocation
                 )
             }
@@ -107,6 +108,7 @@ fun ListView(
 private fun Content(
     list: List<Location>,
     navigateToMap: (Location?) -> Unit,
+    onItemUpdated: (Location) -> Unit,
     deleteLocation: (Location) -> Unit
 ) {
     LazyColumn(
@@ -124,6 +126,7 @@ private fun Content(
                 content = {
                     LocationItem(
                         item = it,
+                        onItemUpdated = onItemUpdated,
                         deleteLocation = deleteLocation
                     )
                 },
@@ -163,6 +166,7 @@ private fun LocationItemContainer(
 @Composable
 private fun LocationItem(
     item: Location,
+    onItemUpdated: (Location) -> Unit,
     deleteLocation: (Location) -> Unit
 ) {
     Box {
@@ -185,7 +189,11 @@ private fun LocationItem(
 
             Switch(
                 checked = item.enabled,
-                onCheckedChange = { item.enabled = !item.enabled },
+                onCheckedChange = {
+                    onItemUpdated(item.apply {
+                        item.enabled = !item.enabled
+                    })
+                },
                 modifier = Modifier
                     .scale(0.8f)
             )
@@ -303,7 +311,8 @@ private fun LocationItemPreview() {
                     0,
                     true
                 ),
-                deleteLocation = {}
+                onItemUpdated = {},
+                deleteLocation = {},
             )
         },
         onClickItem = {}

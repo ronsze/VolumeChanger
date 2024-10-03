@@ -12,17 +12,18 @@ import kr.sdbk.volumechanger.base.AlertState
 import kr.sdbk.volumechanger.base.BaseViewModel
 import kr.sdbk.volumechanger.data.model.Location
 import kr.sdbk.volumechanger.data.repository.LocationRepository
-import kr.sdbk.volumechanger.data.room.entity.LocationEntity
 import kr.sdbk.volumechanger.di.DefaultDispatcher
 import kr.sdbk.volumechanger.di.IODispatcher
 import kr.sdbk.volumechanger.util.Constants
+import kr.sdbk.volumechanger.util.modules.GeofenceModule
 import javax.inject.Inject
 
 @HiltViewModel
 class ListViewModel @Inject constructor(
     @IODispatcher private val ioDispatcher: CoroutineDispatcher,
     @DefaultDispatcher private val defaultDispatcher: CoroutineDispatcher,
-    private val locationRepository: LocationRepository
+    private val locationRepository: LocationRepository,
+    private val geofenceModule: GeofenceModule
 ): BaseViewModel() {
     private val _uiState: MutableStateFlow<ListUiState> = MutableStateFlow(ListUiState.Loading)
     val uiState get() = _uiState.asStateFlow()
@@ -44,27 +45,32 @@ class ListViewModel @Inject constructor(
 
     fun updateLocation(location: Location) {
         viewModelScope.launch {
-            val res = runCatching { withContext(ioDispatcher) { locationRepository.updateLocation(location) } }
-            basicProcessing("Updated", res)
+            val res = runCatching {
+                withContext(ioDispatcher) {
+                    locationRepository.updateLocation(location)
+                    if (location.enabled) geofenceModule.addGeofencing(listOf(location))
+                    else geofenceModule.removeGeofencing(listOf(location))
+                }
+            }
+            res.onSuccess {
+                loadLocation()
+            }
+            res.onFailure {
+                showAlert(it.message ?: Constants.UNKNOWN_ERROR)
+            }
         }
     }
 
     fun deleteLocation(location: Location) {
         viewModelScope.launch {
             val res = runCatching { withContext(ioDispatcher) { locationRepository.deleteLocation(location) } }
-            basicProcessing("Deleted", res)
-        }
-    }
-
-    private fun<R> basicProcessing(message: String, res: Result<R>) {
-        res.onSuccess {
-            if (message.isNotEmpty()) {
-                showAlert(message)
+            res.onSuccess {
+                showAlert("Deleted")
                 loadLocation()
             }
-        }
-        res.onFailure {
-            showAlert(it.message ?: Constants.UNKNOWN_ERROR)
+            res.onFailure {
+                showAlert(it.message ?: Constants.UNKNOWN_ERROR)
+            }
         }
     }
 
