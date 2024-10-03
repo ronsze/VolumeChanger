@@ -27,6 +27,7 @@ import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.CameraPositionState
+import com.google.maps.android.compose.Circle
 import com.google.maps.android.compose.GoogleMap
 import com.google.maps.android.compose.MapProperties
 import com.google.maps.android.compose.MapType
@@ -143,6 +144,14 @@ private fun LocationMarker(
         title = location.name,
         snippet = "${location.range}M",
         icon = BitmapDescriptorFactory.defaultMarker(getRandomMarkerColor(index))
+    )
+
+    Circle(
+        center = location.location,
+        radius = location.range / 2.0,
+        strokeWidth = 5f,
+        strokeColor = Color.Black,
+        fillColor = Color.LightGray.copy(0.4f)
     )
 }
 
